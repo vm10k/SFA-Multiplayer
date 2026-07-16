@@ -54,4 +54,4 @@ Join our community to discuss strategies, report bugs, and stay updated on upcom
 
 ---
 
-Copyright 2026 Street Fighter Alpha Web Multiplayer. All rights reserved.
+Copyright 2026 SFA Multiplayer. All rights reserved.
