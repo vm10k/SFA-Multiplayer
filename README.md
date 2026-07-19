@@ -55,4 +55,4 @@ Join our community to discuss strategies, report bugs, and stay updated on upcom
 
 ---
 
-Copyright 2026 SFA Multiplayer. All rights reserved.
+Copyright 2026 Fan Project. Server Alpha v1.0. All trademarks belong to their respective owners.
