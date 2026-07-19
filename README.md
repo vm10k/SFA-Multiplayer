@@ -1,7 +1,8 @@
 # SFA Multiplayer
-<img width="1672" height="941" alt="45345353454" src="https://github.com/user-attachments/assets/aedc36ad-9c06-452f-a76a-2c55a930fe1b" />
+<img width="1280" height="894" alt="image" src="https://github.com/user-attachments/assets/5e6258c6-53b8-4a16-ab88-a226fdf3be5d" />
 
 Fight. Connect. Dominate.
+https://sfa-multiplayer.ct.ws/
 
 Street Fighter Alpha: Web Multiplayer is a browser-based fighting game experience that brings competitive arcade action to the web. Featuring real-time matchmaking, social integration, and multiple combat modes, it is designed for low-latency competitive play directly in your browser.
 
