@@ -1,5 +1,5 @@
 # SFA Multiplayer
-<img width="1280" height="894" alt="image" src="https://github.com/user-attachments/assets/5e6258c6-53b8-4a16-ab88-a226fdf3be5d" />
+<img width="1280" height="894" alt="image" src="https://github.com/user-attachments/assets/3bcc3a0c-3a41-431e-b367-a773656559f2" />
 
 Fight. Connect. Dominate.
 https://sfa-multiplayer.ct.ws/
