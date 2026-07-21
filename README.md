@@ -53,6 +53,26 @@ The leaderboard tracks the most active participants based on total matches playe
 ## Community
 Join our community to discuss strategies, report bugs, and stay updated on upcoming features. [https://discord.gg/TwfWuRnXun](https://discord.gg/td4qqkBXgv)
 
+# How to Add a Character?
+
+We welcome new characters! To keep the engine safe, you do not need to edit any existing game code. You only need to create and upload three things:
+
+### 1. Your Sprite Folder
+Create a folder named `images/misc/[character_name]/` (lowercase, e.g., `images/misc/homelander/`). Place your PNG spritesheets inside:
+*   `sprites.png` (Required: Idle, walking, attacks, hit reactions)
+*   `projectiles.png` (Optional: Fireballs, beams, etc.)
+*   `trail-sprites.png` (Optional: After-image effects)
+*   `misc-sprites.png` (Optional: Special effects)
+
+### 2. Your Sprite Coordinates (`player-[character_name]-spritedata.js`)
+Create a file named `player-[character_name]-spritedata.js` to map coordinates on your spritesheet. Use Ryu's spritedata file as a template.
+*   Make sure your main function is named: `Create[character_name]SpriteData`
+
+### 3. Your Move List & Frame Data (`player-[character_name].js`)
+Create a file named `player-[character_name].js` to define your character's stats, moves, and hitboxes. Use Ryu's character file as a template.
+*   Make sure your main function is named: `create[character_name]`
+
+Once these three items are ready, submit a Pull Request. and we will handle the system integration and add your character to the select screen!
 ---
 
 Copyright 2026 Fan Project. Server Alpha v1.0. All trademarks belong to their respective owners.
