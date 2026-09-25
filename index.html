@@ -1,0 +1,2388 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Fighter Studio & Real-Time Arena (Ultimate Edition)</title>
+<style>
+  /* =====================================================================
+     1. CSS STYLING & THEMES
+     ===================================================================== */
+  :root {
+    --bg-dark: #0a0b10;
+    --bg-panel: #13151f;
+    --bg-card: #1c1f2e;
+    --bg-active: #272c40;
+    --accent: #ff4757;
+    --accent-hover: #ff6b81;
+    --text-main: #f1f2f6;
+    --text-muted: #8b92a5;
+    --border: #2a3045;
+    --highlight: #2ed573;
+    --gold: #ffa502;
+    --blue: #1e90ff;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; font-family: monospace, sans-serif; user-select: none; }
+  body { background: var(--bg-dark); color: var(--text-main); height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
+
+  header {
+    background: var(--bg-panel);
+    border-bottom: 1px solid var(--border);
+    padding: 6px 14px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    z-index: 30;
+  }
+  .title-group { display: flex; align-items: center; gap: 8px; font-weight: bold; }
+  .title-group span.badge {
+    background: #2ed57322; color: var(--highlight); border: 1px solid var(--highlight);
+    padding: 2px 6px; border-radius: 4px; font-size: 0.7rem; letter-spacing: 1px;
+  }
+  .view-tabs { display: flex; gap: 4px; background: #0c0d14; padding: 3px; border-radius: 6px; }
+  .view-tab {
+    background: transparent; border: none; color: var(--text-muted); padding: 5px 12px;
+    border-radius: 4px; cursor: pointer; font-size: 0.75rem; font-weight: bold; transition: 0.15s;
+  }
+  .view-tab.active { background: var(--accent); color: #fff; }
+  .char-input {
+    background: var(--bg-card); border: 1px solid var(--border); color: #fff;
+    padding: 4px 8px; border-radius: 4px; font-size: 0.8rem; width: 110px;
+  }
+  .btn {
+    background: var(--accent); color: #fff; border: none; padding: 5px 10px;
+    border-radius: 4px; cursor: pointer; font-size: 0.75rem; font-weight: bold;
+    display: inline-flex; align-items: center; gap: 4px;
+  }
+  .btn:hover { background: var(--accent-hover); }
+  .btn-sec { background: var(--bg-card); border: 1px solid var(--border); color: #fff; }
+  .btn-sec:hover { background: #2f3549; }
+  .btn-green { background: var(--highlight); color: #000; }
+  .btn-green:hover { background: #7bed9f; }
+  .btn-gold { background: var(--gold); color: #000; }
+  .btn-gold:hover { background: #eccc68; }
+
+  /* Workspace */
+  .workspace { display: flex; flex: 1; overflow: hidden; position: relative; }
+  .view-container { display: flex; flex: 1; width: 100%; height: 100%; position: absolute; left: 0; top: 0; }
+  .hidden { display: none !important; }
+
+  /* Moves Sidebar */
+  .moves-sidebar {
+    width: 250px; background: var(--bg-panel); border-right: 1px solid var(--border);
+    display: flex; flex-direction: column; overflow-y: auto; padding: 6px; gap: 4px;
+  }
+  .sidebar-title {
+    font-size: 0.7rem; color: var(--text-muted); font-weight: bold; padding: 4px 8px;
+    display: flex; justify-content: space-between; align-items: center; text-transform: uppercase;
+  }
+  .move-row {
+    background: var(--bg-card); border: 1px solid var(--border); border-radius: 4px;
+    padding: 6px; cursor: pointer; display: flex; flex-direction: column; gap: 4px;
+  }
+  .move-row.active { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent); }
+  .move-header { display: flex; justify-content: space-between; font-size: 0.75rem; font-weight: bold; }
+  .frame-strip { display: flex; gap: 3px; overflow-x: auto; padding-bottom: 2px; }
+  .frame-pill {
+    width: 26px; height: 26px; background: #0e1017; border: 1px dashed var(--border);
+    border-radius: 3px; display: flex; align-items: center; justify-content: center;
+    font-size: 0.65rem; color: var(--text-muted); cursor: pointer; flex-shrink: 0;
+  }
+  .frame-pill.assigned { border-style: solid; border-color: var(--highlight); color: var(--highlight); background: #2ed57315; }
+  .frame-pill.active { border-color: var(--accent); border-width: 2px; color: #fff; font-weight: bold; }
+
+  /* Slicer Viewport */
+  .canvas-viewport {
+    flex: 1; background: #07080c; position: relative; overflow: hidden; cursor: crosshair;
+  }
+  canvas#sheetCanvas { position: absolute; left: 0; top: 0; }
+  .viewport-hud {
+    position: absolute; bottom: 10px; left: 10px; background: rgba(19, 21, 31, 0.92);
+    border: 1px solid var(--border); border-radius: 6px; padding: 6px 12px;
+    display: flex; gap: 8px; align-items: center; font-size: 0.72rem; z-index: 10;
+  }
+
+  /* Tools Sidebar */
+  .tools-sidebar {
+    width: 290px; background: var(--bg-panel); border-left: 1px solid var(--border);
+    padding: 10px; display: flex; flex-direction: column; gap: 10px; overflow-y: auto; font-size: 0.75rem;
+  }
+  .tool-card {
+    background: var(--bg-card); border: 1px solid var(--border); border-radius: 6px;
+    padding: 8px; display: flex; flex-direction: column; gap: 6px;
+  }
+  .tool-card header {
+    background: transparent; border-bottom: 1px solid var(--border); padding: 0 0 4px 0;
+    font-size: 0.75rem; color: var(--gold); font-weight: bold;
+  }
+
+  /* Arena Viewport */
+  .stage-viewport {
+    flex: 1; background: #000; position: relative; display: flex;
+    justify-content: center; align-items: center; overflow: hidden;
+  }
+  canvas#stageCanvas {
+    background: linear-gradient(to bottom, #11141e 0%, #202434 72%, #485460 72%, #1e272e 100%);
+    box-shadow: 0 0 30px rgba(0,0,0,0.9);
+    image-rendering: pixelated;
+  }
+  .hud-health {
+    position: absolute; top: 16px; left: 20px; right: 20px; display: flex;
+    justify-content: space-between; pointer-events: none; z-index: 20;
+  }
+  .bar-container { width: 44%; display: flex; flex-direction: column; gap: 3px; }
+  .bar-label { display: flex; justify-content: space-between; font-size: 0.75rem; font-weight: bold; }
+  .health-frame {
+    height: 18px; background: rgba(0,0,0,0.6); border: 2px solid #fff;
+    box-shadow: 0 0 8px rgba(0,0,0,0.8); overflow: hidden;
+  }
+  .health-fill {
+    width: 100%; height: 100%; background: linear-gradient(to bottom, #ffd32a, #ff9f1a);
+    transition: width 0.08s linear;
+  }
+
+  .key {
+    background: #000; border: 1px solid #444; border-radius: 3px;
+    padding: 1px 4px; color: var(--highlight); font-weight: bold; font-size: 0.7rem;
+  }
+
+  /* Modal */
+  .modal-backdrop {
+    display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(0,0,0,0.88); z-index: 100; align-items: center; justify-content: center;
+  }
+  .modal {
+    background: var(--bg-panel); border: 1px solid var(--border); border-radius: 8px;
+    width: 84%; max-width: 960px; height: 86vh; display: flex; flex-direction: column; padding: 14px;
+  }
+  .modal-tabs { display: flex; gap: 6px; margin-bottom: 8px; }
+  .tab-btn {
+    background: var(--bg-card); color: var(--text-muted); border: 1px solid var(--border);
+    padding: 5px 12px; border-radius: 4px; cursor: pointer; font-size: 0.75rem;
+  }
+  .tab-btn.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+  textarea.code-export {
+    flex: 1; background: #08090e; color: #a4b0be; border: 1px solid var(--border);
+    border-radius: 6px; padding: 10px; font-family: monospace; font-size: 0.75rem;
+    white-space: pre; overflow: auto;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="title-group">
+    <span>FIGHTER STUDIO + ARENA</span>
+    <span class="badge">ULTIMATE EDITION</span>
+    <input type="text" id="charName" class="char-input" value="homelander" title="Character ID">
+    
+    <!-- Image Upload -->
+    <input type="file" id="fileInput" accept="image/*" style="display:none;">
+    <button class="btn btn-sec" onclick="document.getElementById('fileInput').click()">Upload Sheet PNG</button>
+    
+    <!-- JS Configs Upload (NEW) -->
+    <input type="file" id="jsFilesInput" accept=".js" multiple style="display:none;">
+    <button class="btn btn-sec" style="border-color:var(--highlight); color:var(--highlight);" onclick="document.getElementById('jsFilesInput').click()">📂 Load Character JS Files</button>
+    
+    <button class="btn btn-gold" onclick="autoDetectSprites()">🔍 Auto-Detect</button>
+    <button class="btn btn-gold" onclick="smartAutoFillAll()">⚡ Smart Auto-Map</button>
+  </div>
+
+  <div class="view-tabs">
+    <button class="view-tab active" id="tabStudioBtn" onclick="switchView('studio')">Sprite Slicer & Baseline</button>
+    <button class="view-tab" id="tabArenaBtn" onclick="switchView('arena')">Interactive Arena Test</button>
+  </div>
+
+  <div>
+    <button class="btn btn-green" onclick="openExportModal()">Generate & Export JS</button>
+  </div>
+</header>
+
+<div class="workspace">
+  <!-- VIEW 1: SPRITE SLICER & STABILIZER VIEW -->
+  <div class="view-container" id="viewStudio">
+    <!-- Left Moves List -->
+    <div class="moves-sidebar" id="movesList"></div>
+
+    <!-- Center Sheet Canvas -->
+    <div class="canvas-viewport" id="sheetViewport">
+      <canvas id="sheetCanvas"></canvas>
+      <div class="viewport-hud">
+        <span>Zoom: <strong id="lblZoom" style="color:var(--highlight)">100%</strong></span>
+        <button class="btn btn-sec" onclick="changeZoom(1.2)">+</button>
+        <button class="btn btn-sec" onclick="changeZoom(1/1.2)">-</button>
+        <button class="btn btn-sec" onclick="resetZoom()">Reset View</button>
+        <span style="color:var(--text-muted)">| Space+Drag to Pan. Click box to assign. Del to delete.</span>
+      </div>
+    </div>
+
+    <!-- Right Tools & Ground Baseline Stabilizer -->
+    <div class="tools-sidebar">
+      <div class="tool-card">
+        <header>Mini Frame Preview</header>
+        <div style="height:140px; background:#07080b; border:1px solid var(--border); border-radius:4px; display:flex; justify-content:center; align-items:center; overflow:hidden;">
+          <canvas id="miniPreviewCanvas" width="160" height="140"></canvas>
+        </div>
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-top:2px;">
+          <button class="btn btn-sec" style="flex:1;" onclick="togglePlayPreview()" id="btnPlayPause">Pause</button>
+          <span style="font-size:0.7rem; color:var(--text-muted); margin-left:8px;">Speed: <strong id="lblFps">8fps</strong></span>
+          <input type="range" id="rngFps" min="2" max="24" value="8" style="width:70px; margin-left:6px;" oninput="previewFps = parseInt(this.value); document.getElementById('lblFps').innerText = this.value + 'fps';">
+        </div>
+      </div>
+
+      <!-- Anti-Flicker Foot Grounding (ImageOffsetY) -->
+      <div class="tool-card">
+        <header>Anti-Flicker Foot Baseline (ImageOffsetY)</header>
+        <div style="color:var(--text-muted); font-size:0.68rem;">Short crouching/striking sprites stay planted on floor:</div>
+        <div style="display:flex; justify-content:space-between; margin-top:4px;">
+          <span>Active Frame Y-Offset:</span>
+          <strong id="lblCurOffsetY" style="color:var(--highlight)">0px</strong>
+        </div>
+        <input type="range" id="rngFrameOffsetY" min="-40" max="80" value="0" step="1" oninput="adjustActiveFrameOffset('y', parseInt(this.value))">
+        <div style="display:flex; justify-content:space-between; margin-top:4px;">
+          <span>Active Frame X-Offset:</span>
+          <strong id="lblCurOffsetX" style="color:var(--highlight)">0px</strong>
+        </div>
+        <input type="range" id="rngFrameOffsetX" min="-60" max="60" value="0" step="1" oninput="adjustActiveFrameOffset('x', parseInt(this.value))">
+        <div style="display:flex; gap:4px; margin-top:4px;">
+          <button class="btn btn-sec" style="flex:1;" onclick="autoStabilizeCurrentMove()">Auto-Align Baseline</button>
+          <button class="btn btn-sec" style="flex:1;" onclick="resetFrameOffsets()">Reset Offsets</button>
+        </div>
+      </div>
+
+      <div class="tool-card">
+        <header>Hitbox & Attack Setup</header>
+        <label><input type="checkbox" id="chkFrameIsHit" onchange="toggleActiveFrameHit(this.checked)"> Mark Frame as Active Attack Hit</label>
+        <div style="display:flex; justify-content:space-between; margin-top:4px;">
+          <span>Damage Power:</span>
+          <input type="number" id="numDamage" value="15" style="width:60px; background:#000; border:1px solid #444; color:#fff; padding:2px 4px; font-size:0.75rem;" onchange="setActiveFrameProp('damage', parseInt(this.value))">
+        </div>
+        <div style="display:flex; justify-content:space-between; margin-top:4px;">
+          <span>Hit Stun (ticks):</span>
+          <input type="number" id="numStun" value="10" style="width:60px; background:#000; border:1px solid #444; color:#fff; padding:2px 4px; font-size:0.75rem;" onchange="setActiveFrameProp('stun', parseInt(this.value))">
+        </div>
+      </div>
+
+      <div class="tool-card">
+        <header>Sprite Box Slicer Tools</header>
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:4px;">
+          <button class="btn btn-sec" onclick="splitSelectedBox(2)">✂️ Split in 2</button>
+          <button class="btn btn-sec" onclick="splitSelectedBox(3)">✂️ Split in 3</button>
+        </div>
+        <button class="btn btn-sec" style="color:var(--accent);" onclick="deleteSelectedBox()">🗑️ Delete Selected Box</button>
+        <button class="btn btn-sec" onclick="assignRowToActiveMove()">⚡ Assign Row to Active Move</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- VIEW 2: INTERACTIVE COMBAT ARENA -->
+  <div class="view-container hidden" id="viewArena">
+    <div class="stage-viewport">
+      <div class="hud-health">
+        <div class="bar-container">
+          <div class="bar-label">
+            <span style="color:var(--blue);" id="lblP1Name">HOMELANDER (P1)</span>
+            <span id="lblP1HpVal">100%</span>
+          </div>
+          <div class="health-frame"><div class="health-fill" id="hpBarP1"></div></div>
+        </div>
+
+        <div style="color:var(--gold); font-weight:bold; font-size:1.4rem; text-shadow:0 0 6px #000; padding-top:4px;">VS</div>
+
+        <div class="bar-container">
+          <div class="bar-label">
+            <span style="color:var(--gold);">SAGAT (DUMMY 247px)</span>
+            <span id="lblDummyHpVal">100%</span>
+          </div>
+          <div class="health-frame"><div class="health-fill" id="hpBarDummy"></div></div>
+        </div>
+      </div>
+
+      <canvas id="stageCanvas" width="768" height="448"></canvas>
+    </div>
+
+    <!-- Arena Real-Time Controls -->
+    <div class="tools-sidebar" style="width:280px;">
+      <div class="tool-card">
+        <header>Engine Controls</header>
+        <div><span class="key">&larr;</span> / <span class="key">&rarr;</span>: Walk Forward / Back</div>
+        <div><span class="key">&uarr;</span>: Exact Parabolic Jump</div>
+        <div><span class="key">&darr;</span>: Crouch Stance</div>
+        <div style="margin-top:4px; color:var(--highlight); font-weight:bold;">Standing Attacks (Works while walking!):</div>
+        <div><span class="key">A</span>, <span class="key">S</span>, <span class="key">D</span>: Light / Med / Hard Punch</div>
+        <div><span class="key">Z</span>, <span class="key">X</span>, <span class="key">C</span>: Light / Med / Hard Kick</div>
+        <div style="margin-top:4px; color:var(--gold); font-weight:bold;">Crouching Attacks:</div>
+        <div><span class="key">&darr;</span> + <span class="key">A</span>, <span class="key">S</span>, <span class="key">D</span>: Crouch Punches</div>
+        <div><span class="key">&darr;</span> + <span class="key">Z</span>, <span class="key">X</span>, <span class="key">C</span>: Crouch Kicks</div>
+        <div style="margin-top:4px; color:var(--blue); font-weight:bold;">Jumping Attacks:</div>
+        <div><span class="key">&uarr;</span> then <span class="key">A</span>, <span class="key">S</span>, <span class="key">D</span>: Aerial Punches</div>
+        <div><span class="key">&uarr;</span> then <span class="key">Z</span>, <span class="key">X</span>, <span class="key">C</span>: Aerial Kicks</div>
+        <div style="margin-top:4px;"><span class="key">Q</span>: Special Heat Vision Laser</div>
+      </div>
+
+      <div class="tool-card">
+        <header>Scale Multiplier vs Sagat</header>
+        <div style="display:flex; justify-content:space-between;">
+          <span>Multiplier: <strong id="lblArenaScale" style="color:var(--highlight)">1.85x</strong></span>
+          <span>Height: <strong id="lblArenaHeight" style="color:var(--gold)">247px</strong></span>
+        </div>
+        <input type="range" id="rngArenaScale" min="1.0" max="3.5" step="0.05" value="1.85" oninput="setGlobalScale(this.value)">
+        <div style="display:flex; gap:4px; margin-top:2px;">
+          <button class="btn btn-sec" style="flex:1; font-size:0.68rem;" onclick="setGlobalScale(2.05)">Homelander (2.05x)</button>
+          <button class="btn btn-sec" style="flex:1; font-size:0.68rem;" onclick="setGlobalScale(1.85)">Sagat (1.85x)</button>
+          <button class="btn btn-sec" style="flex:1; font-size:0.68rem;" onclick="setGlobalScale(1.0)">1.0x (Raw)</button>
+        </div>
+      </div>
+
+      <div class="tool-card">
+        <header>Authentic SF2 Jump Physics</header>
+        <div style="display:flex; justify-content:space-between;">
+          <span>Launch Velocity (Vy): <strong id="lblJumpSpeed">210</strong></span>
+        </div>
+        <input type="range" id="rngJumpVy" min="140" max="260" step="5" value="210" oninput="ARENA.jumpVy = parseInt(this.value); document.getElementById('lblJumpSpeed').innerText = this.value;">
+        <div style="display:flex; justify-content:space-between; margin-top:4px;">
+          <span>Forward/Back Vx: <strong id="lblJumpVx">35</strong></span>
+        </div>
+        <input type="range" id="rngJumpVx" min="15" max="55" step="1" value="35" oninput="ARENA.jumpVx = parseInt(this.value); document.getElementById('lblJumpVx').innerText = this.value;">
+      </div>
+
+      <div class="tool-card">
+        <header>Display Options</header>
+        <label><input type="checkbox" id="chkInvertFlip" checked> Invert Spritesheet (Sheet Faces Left)</label>
+        <label><input type="checkbox" id="chkHitboxes" checked> Show Hurtboxes (Green) & Hitboxes (Red)</label>
+        <label><input type="checkbox" id="chkFloorLine" checked> Floor Reference & Shadows</label>
+      </div>
+
+      <div class="tool-card">
+        <header>Arena Opponent Reset</header>
+        <button class="btn btn-sec" onclick="resetArenaMatch()">Reset Dummy & Player</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal For JS Code Export -->
+<div class="modal-backdrop" id="exportModal">
+  <div class="modal">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 10px;">
+      <h2 style="font-size:1.1rem; color:var(--gold);">100% Engine Aligned JS Exporter</h2>
+      <button class="btn btn-sec" onclick="closeExportModal()">Close</button>
+    </div>
+    <div class="modal-tabs">
+      <button class="tab-btn active" id="tabCode1" onclick="showExportTab(1)">player-[char]-spritedata.js</button>
+      <button class="tab-btn" id="tabCode2" onclick="showExportTab(2)">player-[char].js</button>
+      <button class="btn btn-green" style="margin-left:auto;" onclick="downloadExportFile()">Download Active File</button>
+      <button class="btn btn-sec" onclick="copyExportCode()">Copy Code</button>
+    </div>
+    <textarea class="code-export" id="txtExportCode" readonly></textarea>
+  </div>
+</div>
+
+<script>
+/* =========================================================================
+   1. GLOBAL STATE & UNIFORM MOVES LIST
+   ========================================================================= */
+const GROUND_Y = 380;
+
+const CONSTANTS = {
+  HALF_G: 4.903325,
+  Y_DAMPING: 0.1,
+  X_DAMPING: 0.1,
+  DEFAULT_JUMP_SPEED: 1.2
+};
+
+const ARENA = {
+  jumpVy: 210,
+  jumpVx: 35
+};
+
+const MOVES = [
+  // Basics
+  { id: "stance",    name: "Stance (Idle)",            frames: 4, speed: 5, loop: true },
+  { id: "crouch",    name: "Crouch",                   frames: 3, speed: 2, loop: false },
+  { id: "f-walk",    name: "Forward Walk",             frames: 6, speed: 4, loop: true },
+  { id: "b-walk",    name: "Back Walk",                frames: 4, speed: 4, loop: true },
+  { id: "jump",      name: "Jump (Ascent/Apex/Fall)",  frames: 4, speed: 6, loop: false },
+
+  // Standing Attacks
+  { id: "p1",        name: "Light Punch (LP)",         frames: 3, speed: 3, loop: false },
+  { id: "p2",        name: "Medium Punch (MP)",        frames: 3, speed: 4, loop: false },
+  { id: "p3",        name: "Hard Punch (HP)",          frames: 3, speed: 4, loop: false },
+  { id: "k1",        name: "Light Kick (LK)",          frames: 3, speed: 3, loop: false },
+  { id: "k2",        name: "Medium Kick (MK)",         frames: 3, speed: 4, loop: false },
+  { id: "k3",        name: "Hard Kick (HK)",           frames: 3, speed: 4, loop: false },
+
+  // Crouching Attacks
+  { id: "c-p1",      name: "Crouch Light Punch",       frames: 3, speed: 2, loop: false },
+  { id: "c-p2",      name: "Crouch Medium Punch",      frames: 3, speed: 3, loop: false },
+  { id: "c-p3",      name: "Crouch Hard Punch",        frames: 3, speed: 4, loop: false },
+  { id: "c-k1",      name: "Crouch Light Kick",        frames: 3, speed: 2, loop: false },
+  { id: "c-k2",      name: "Crouch Medium Kick",       frames: 3, speed: 3, loop: false },
+  { id: "c-k3",      name: "Crouch Hard Kick (Sweep)", frames: 3, speed: 4, loop: false },
+
+  // Aerial Attacks
+  { id: "jump_p1",   name: "Jump Light Punch",         frames: 2, speed: 4, loop: false },
+  { id: "jump_p2",   name: "Jump Medium Punch",        frames: 2, speed: 4, loop: false },
+  { id: "jump_p3",   name: "Jump Hard Punch",          frames: 2, speed: 4, loop: false },
+  { id: "jump_k1",   name: "Jump Light Kick",          frames: 2, speed: 4, loop: false },
+  { id: "jump_k2",   name: "Jump Medium Kick",         frames: 2, speed: 4, loop: false },
+  { id: "jump_k3",   name: "Jump Hard Kick",           frames: 2, speed: 4, loop: false },
+
+  // Special & Reactions
+  { id: "special-1", name: "Heat Vision Laser",        frames: 3, speed: 5, loop: false },
+  { id: "hit-sln",   name: "Hit Light Reaction",       frames: 2, speed: 4, loop: false },
+  { id: "hit-trip",  name: "Tripped / Fall",           frames: 3, speed: 4, loop: false },
+  { id: "down",      name: "Floored / Down",           frames: 1, speed: 15, loop: false },
+  { id: "getup",     name: "Get Up",                   frames: 3, speed: 4, loop: false },
+  { id: "win",       name: "Win Pose",                 frames: 3, speed: 6, loop: false }
+];
+
+let sheetCanvas, sctx, sheetViewport;
+let miniCanvas, mctx;
+let stageCanvas, actx;
+
+let assignedSprites = {};
+let detectedBoxes = [];
+let detectedRows = [];
+let selectedBox = null;
+
+let currentMove = "stance";
+let currentSlot = 0;
+let globalScale = 1.85;
+
+let sheetImg = new Image();
+let sheetReady = false;
+
+let zoom = 1.0;
+let panX = 40, panY = 40;
+let isPanning = false;
+let startPanX = 0, startPanY = 0;
+let spaceKey = false;
+
+let isPreviewPlaying = true;
+let previewFps = 8;
+let previewFrame = 0;
+let previewTimer = 0;
+
+let P1 = {
+  x: 180, y: 0,
+  jumpT: 0, jumpVx: 0, jumpVy: 210, jumpSpeed: 1.2,
+  direction: -1,
+  state: "stance",
+  frameIdx: 0, timer: 0,
+  isAirborne: false, hp: 100, hitCooldown: 0, stunTicks: 0
+};
+
+let Dummy = {
+  x: 520, y: 0, w: 131, h: 247,
+  hp: 100, direction: 1, hitFlash: 0, stunTimer: 0
+};
+
+let keys = {};
+
+/* =========================================================================
+   2. INITIALIZATION
+   ========================================================================= */
+function init() {
+  sheetCanvas = document.getElementById("sheetCanvas");
+  sctx = sheetCanvas.getContext("2d");
+  sheetViewport = document.getElementById("sheetViewport");
+  
+  miniCanvas = document.getElementById("miniPreviewCanvas");
+  mctx = miniCanvas.getContext("2d");
+  
+  stageCanvas = document.getElementById("stageCanvas");
+  actx = stageCanvas.getContext("2d");
+
+  // PNG Spritesheet listener
+  document.getElementById("fileInput").addEventListener("change", function(e) {
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = ev => {
+      sheetImg.onload = () => {
+        sheetReady = true;
+        resetZoom();
+        if (Object.keys(assignedSprites).length === 0) {
+          autoDetectSprites();
+        } else {
+          drawSheetCanvas();
+          renderMiniPreview();
+        }
+      };
+      sheetImg.src = ev.target.result;
+    };
+    reader.readAsDataURL(file);
+  });
+
+  setupJSFilesImporter();
+  buildMovesSidebar();
+  setupSheetEvents();
+  setupArenaInputs();
+  setGlobalScale(2.05);
+
+  window.addEventListener("resize", resizeSheetCanvas);
+  resizeSheetCanvas();
+
+  requestAnimationFrame(masterLoop);
+}
+
+window.onload = init;
+
+/* =========================================================================
+   3. JS FILES IMPORTER & SETTINGS RESTORER (NEW!)
+   ========================================================================= */
+function setupJSFilesImporter() {
+  const input = document.getElementById("jsFilesInput");
+  input.addEventListener("change", function(e) {
+    const files = Array.from(e.target.files);
+    if (!files.length) return;
+
+    let filesLoaded = 0;
+    files.forEach(file => {
+      const reader = new FileReader();
+      reader.onload = ev => {
+        const text = ev.target.result;
+        parseLoadedJSFile(text, file.name);
+        filesLoaded++;
+        if (filesLoaded === files.length) {
+          postImportSync();
+        }
+      };
+      reader.readAsText(file);
+    });
+  });
+}
+
+function parseLoadedJSFile(code, fileName) {
+  const isSpriteData = code.includes("spriteLookup_.load");
+  const isPlayerLogic = code.includes("new Player") || code.includes("createHomelander") || code.includes("addAnimation");
+
+  if (isSpriteData) {
+    parseSpriteDataScript(code);
+  }
+  if (isPlayerLogic) {
+    parsePlayerLogicScript(code);
+  }
+}
+
+function parseSpriteDataScript(code) {
+  // Regex: spriteLookup_.load("images/misc/homelander/stance-0.png", "images/misc/homelander/sprites.png", "-314px", "-290px", "72px", "132px");
+  const regex = /spriteLookup_\.load\s*\(\s*["']([^"']+)["']\s*,\s*["']([^"']+)["']\s*,\s*["'](-?\d+)px?["']\s*,\s*["'](-?\d+)px?["']\s*,\s*["'](\d+)px?["']\s*,\s*["'](\d+)px?["']/g;
+  let match;
+  let count = 0;
+
+  while ((match = regex.exec(code)) !== null) {
+    const filePath = match[1];
+    const x = Math.abs(parseInt(match[3]));
+    const y = Math.abs(parseInt(match[4]));
+    const w = parseInt(match[5]);
+    const h = parseInt(match[6]);
+
+    // Extract character name from folder if possible
+    const parts = filePath.split('/');
+    if (parts.length >= 3) {
+      const folderName = parts[parts.length - 2];
+      if (folderName && folderName !== "misc") {
+        document.getElementById("charName").value = folderName;
+      }
+    }
+
+    const fileNameNoExt = parts.pop().replace(/\.png$/i, "");
+    const dashIdx = fileNameNoExt.lastIndexOf('-');
+
+    if (dashIdx !== -1) {
+      const rawMove = fileNameNoExt.slice(0, dashIdx);
+      const frameIdx = parseInt(fileNameNoExt.slice(dashIdx + 1));
+
+      // Match to our known MOVES
+      const m = MOVES.find(x => x.id === rawMove || x.id.replace(/_/g, '-') === rawMove.replace(/_/g, '-'));
+      if (m) {
+        const key = `${m.id}_${frameIdx}`;
+        if (!assignedSprites[key]) {
+          assignedSprites[key] = {
+            x, y, w, h, offX: 0, offY: 0, hit: false, damage: 15, stun: 10
+          };
+        } else {
+          assignedSprites[key].x = x;
+          assignedSprites[key].y = y;
+          assignedSprites[key].w = w;
+          assignedSprites[key].h = h;
+        }
+
+        if (frameIdx >= m.frames) {
+          m.frames = frameIdx + 1;
+        }
+        count++;
+      }
+    }
+  }
+}
+
+function parsePlayerLogicScript(code) {
+  // 1. Character Name
+  const charMatch = code.match(/new\s+Player\s*\(\s*["']([^"']+)["']/i);
+  if (charMatch) {
+    document.getElementById("charName").value = charMatch[1];
+    document.getElementById("lblP1Name").innerText = charMatch[1].toUpperCase() + " (P1)";
+  }
+
+  // 2. Global Scaling Multiplier (SCALE = 2.05)
+  const scaleMatch = code.match(/var\s+SCALE\s*=\s*([0-9.]+)/i);
+  if (scaleMatch) {
+    setGlobalScale(parseFloat(scaleMatch[1]));
+  }
+
+  // 3. Jump Physics (Vy & Vx)
+  const vyMatch = code.match(/jump\.Vy\s*=\s*(\d+)/i);
+  if (vyMatch) {
+    ARENA.jumpVy = parseInt(vyMatch[1]);
+    document.getElementById("rngJumpVy").value = ARENA.jumpVy;
+    document.getElementById("lblJumpSpeed").innerText = ARENA.jumpVy;
+    P1.jumpVy = ARENA.jumpVy;
+  }
+
+  const vxMatch = code.match(/f_jump\.Vx\s*=\s*(-?\d+)/i);
+  if (vxMatch) {
+    ARENA.jumpVx = Math.abs(parseInt(vxMatch[1]));
+    document.getElementById("rngJumpVx").value = ARENA.jumpVx;
+    document.getElementById("lblJumpVx").innerText = ARENA.jumpVx;
+  }
+
+  // 4. Frame Offsets & Hitbox Properties Parser
+  const lines = code.split('\n');
+  lines.forEach(line => {
+    const fMatch = line.match(/f\s*\(\s*["']([^"']+)["']\s*,\s*(\d+)\s*\)/);
+    if (fMatch) {
+      const rawMove = fMatch[1];
+      const frameIdx = parseInt(fMatch[2]);
+      const m = MOVES.find(x => x.id === rawMove || x.id.replace(/_/g, '-') === rawMove.replace(/_/g, '-'));
+      if (m) {
+        const key = `${m.id}_${frameIdx}`;
+        if (!assignedSprites[key]) {
+          assignedSprites[key] = { x: 0, y: 0, w: 70, h: 130, offX: 0, offY: 0, hit: false, damage: 15, stun: 10 };
+        }
+
+        // Check for attack hit
+        if (line.includes("COMBAT_FLAGS.ATTACK") || line.includes("ATTACK_FLAGS")) {
+          assignedSprites[key].hit = true;
+        }
+
+        // Damage detection (e.g. , 15, null, 0, ...)
+        const dmgMatch = line.match(/,\s*(\d+)\s*,\s*(?:null|0)\s*,\s*0/);
+        if (dmgMatch) {
+          assignedSprites[key].damage = parseInt(dmgMatch[1]);
+        }
+
+        // ImageOffsetY parser (often located after null, 0, or at the end of args)
+        const offYMatch = line.match(/null\s*,\s*0\s*,\s*(-?\d+)/);
+        if (offYMatch) {
+          assignedSprites[key].offY = parseInt(offYMatch[1]);
+        }
+
+        // clipMove offset parser (e.g. clipMove({Front: 20}))
+        const clipMoveMatch = line.match(/clipMove\s*\(\s*\{\s*Front\s*:\s*(-?\d+)\s*\}\s*\)/);
+        if (clipMoveMatch) {
+          assignedSprites[key].offX = parseInt(clipMoveMatch[1]);
+        }
+      }
+    }
+  });
+}
+
+function postImportSync() {
+  // Re-populate slice boxes directly from the imported sprite coordinates
+  detectedBoxes = Object.values(assignedSprites).filter(b => b.w > 0 && b.h > 0).map(b => ({
+    x: b.x, y: b.y, w: b.w, h: b.h,
+    offX: b.offX || 0, offY: b.offY || 0,
+    hit: !!b.hit, damage: b.damage || 15, stun: b.stun || 10
+  }));
+
+  clusterIntoRows();
+  buildMovesSidebar();
+  selectMove("stance");
+  loadActiveFrameDetails();
+  drawSheetCanvas();
+  renderMiniPreview();
+  alert("Settings & Sprite Data successfully restored from your JS files!");
+}
+
+/* =========================================================================
+   4. UI CONTROLS & VIEWS
+   ========================================================================= */
+function switchView(viewName) {
+  const isStudio = (viewName === 'studio');
+  document.getElementById("viewStudio").classList.toggle("hidden", !isStudio);
+  document.getElementById("viewArena").classList.toggle("hidden", isStudio);
+  document.getElementById("tabStudioBtn").classList.toggle("active", isStudio);
+  document.getElementById("tabArenaBtn").classList.toggle("active", !isStudio);
+
+  if (isStudio) resizeSheetCanvas();
+}
+
+function buildMovesSidebar() {
+  const container = document.getElementById("movesList");
+  container.innerHTML = "";
+
+  MOVES.forEach(m => {
+    const row = document.createElement("div");
+    row.className = "move-row" + (m.id === currentMove ? " active" : "");
+    row.onclick = (e) => {
+      if (!e.target.classList.contains("frame-pill")) selectMove(m.id);
+    };
+
+    const header = document.createElement("div");
+    header.className = "move-header";
+    header.innerHTML = `<span>${m.name}</span><span style="font-size:0.65rem; color:var(--text-muted);">${m.frames}f</span>`;
+    row.appendChild(header);
+
+    const strip = document.createElement("div");
+    strip.className = "frame-strip";
+    for (let i = 0; i < m.frames; i++) {
+      const pill = document.createElement("div");
+      pill.className = "frame-pill";
+      pill.innerText = i;
+      const key = `${m.id}_${i}`;
+      if (assignedSprites[key]) pill.classList.add("assigned");
+      if (m.id === currentMove && i === currentSlot) pill.classList.add("active");
+
+      pill.onclick = (e) => {
+        e.stopPropagation();
+        selectMove(m.id);
+        selectSlot(i);
+      };
+      strip.appendChild(pill);
+    }
+    row.appendChild(strip);
+    container.appendChild(row);
+  });
+}
+
+function selectMove(moveId) {
+  currentMove = moveId;
+  currentSlot = 0;
+  buildMovesSidebar();
+  loadActiveFrameDetails();
+}
+
+function selectSlot(slotIdx) {
+  currentSlot = slotIdx;
+  buildMovesSidebar();
+  loadActiveFrameDetails();
+}
+
+function setGlobalScale(val) {
+  globalScale = parseFloat(val);
+  document.getElementById("rngArenaScale").value = globalScale;
+  document.getElementById("lblArenaScale").innerText = globalScale.toFixed(2) + "x";
+  document.getElementById("lblArenaHeight").innerText = Math.round(132 * globalScale) + "px";
+  renderMiniPreview();
+}
+
+/* =========================================================================
+   5. AUTO-DETECT & SMART MAP LOGIC
+   ========================================================================= */
+function autoDetectSprites() {
+  if (!sheetReady) {
+    alert("Upload a spritesheet PNG first!");
+    return;
+  }
+  const off = document.createElement("canvas");
+  off.width = sheetImg.width;
+  off.height = sheetImg.height;
+  const octx = off.getContext("2d");
+  octx.drawImage(sheetImg, 0, 0);
+
+  const imgData = octx.getImageData(0, 0, off.width, off.height).data;
+  const w = off.width, h = off.height;
+  const visited = new Uint8Array(w * h);
+  let rawBoxes = [];
+
+  for (let y = 0; y < h; y += 4) {
+    for (let x = 0; x < w; x += 4) {
+      const idx = y * w + x;
+      if (!visited[idx] && imgData[idx * 4 + 3] > 25) {
+        let minX = x, maxX = x, minY = y, maxY = y;
+        const q = [x, y];
+        visited[idx] = 1;
+
+        let ptr = 0;
+        while (ptr < q.length) {
+          const cx = q[ptr++];
+          const cy = q[ptr++];
+          if (cx < minX) minX = cx;
+          if (cx > maxX) maxX = cx;
+          if (cy < minY) minY = cy;
+          if (cy > maxY) maxY = cy;
+
+          const nbrs = [[cx + 4, cy], [cx - 4, cy], [cx, cy + 4], [cx, cy - 4]];
+          for (let n = 0; n < nbrs.length; n++) {
+            const nx = nbrs[n][0], ny = nbrs[n][1];
+            if (nx >= 0 && nx < w && ny >= 0 && ny < h) {
+              const nidx = ny * w + nx;
+              if (!visited[nidx] && imgData[nidx * 4 + 3] > 25) {
+                visited[nidx] = 1;
+                q.push(nx, ny);
+              }
+            }
+          }
+        }
+
+        const bw = maxX - minX;
+        const bh = maxY - minY;
+        if (bw > 20 && bh > 30) {
+          rawBoxes.push({
+            x: Math.max(0, minX - 2),
+            y: Math.max(0, minY - 2),
+            w: Math.min(w - minX, bw + 4),
+            h: Math.min(h - minY, bh + 4),
+            offX: 0, offY: 0, hit: false, damage: 15, stun: 10
+          });
+        }
+      }
+    }
+  }
+
+  if (rawBoxes.length > 6) {
+    const medH = [...rawBoxes].map(b => b.h).sort((a,b) => a - b)[Math.floor(rawBoxes.length / 2)];
+    rawBoxes = rawBoxes.filter(b => b.h >= medH * 0.45 && b.h <= medH * 1.85 && b.w <= 400);
+  }
+
+  detectedBoxes = rawBoxes;
+  clusterIntoRows();
+  drawSheetCanvas();
+}
+
+function clusterIntoRows() {
+  if (!detectedBoxes.length) { detectedRows = []; return; }
+  detectedBoxes.sort((a, b) => a.y - b.y);
+
+  let rows = [];
+  let curRow = [detectedBoxes[0]];
+  let curY = detectedBoxes[0].y;
+
+  for (let i = 1; i < detectedBoxes.length; i++) {
+    const b = detectedBoxes[i];
+    if (Math.abs(b.y - curY) < 38) {
+      curRow.push(b);
+    } else {
+      curRow.sort((a, b) => a.x - b.x);
+      rows.push(curRow);
+      curRow = [b];
+      curY = b.y;
+    }
+  }
+  if (curRow.length) {
+    curRow.sort((a, b) => a.x - b.x);
+    rows.push(curRow);
+  }
+
+  detectedRows = rows;
+  detectedBoxes = rows.flat();
+}
+
+function smartAutoFillAll() {
+  if (!sheetReady || detectedRows.length === 0) autoDetectSprites();
+  assignedSprites = {};
+
+  if (detectedRows[0]) {
+    assignSliceToMove("stance", detectedRows[0].slice(0, 4));
+    if (detectedRows[0].length > 4) assignSliceToMove("crouch", detectedRows[0].slice(4, 7));
+  }
+  if (detectedRows[1]) {
+    assignSliceToMove("f-walk", detectedRows[1].slice(0, 6));
+    if (detectedRows[1].length > 6) assignSliceToMove("b-walk", detectedRows[1].slice(6, 10));
+  }
+  if (detectedRows[2]) assignSliceToMove("jump", detectedRows[2].slice(0, 4));
+  
+  if (detectedRows[3]) {
+    assignSliceToMove("p1", detectedRows[3].slice(0, 3));
+    assignSliceToMove("p2", detectedRows[3].slice(3, 6));
+    assignSliceToMove("p3", detectedRows[3].slice(6, 9));
+  }
+  if (detectedRows[4]) {
+    assignSliceToMove("k1", detectedRows[4].slice(0, 3));
+    assignSliceToMove("k2", detectedRows[4].slice(3, 6));
+    assignSliceToMove("k3", detectedRows[4].slice(6, 9));
+  }
+  if (detectedRows[5]) {
+    assignSliceToMove("c-p1", detectedRows[5].slice(0, 3));
+    assignSliceToMove("c-p2", detectedRows[5].slice(3, 6));
+    assignSliceToMove("c-p3", detectedRows[5].slice(6, 9));
+  }
+  if (detectedRows[6]) {
+    assignSliceToMove("c-k1", detectedRows[6].slice(0, 3));
+    assignSliceToMove("c-k2", detectedRows[6].slice(3, 6));
+    assignSliceToMove("c-k3", detectedRows[6].slice(6, 9));
+  }
+  if (detectedRows[7]) {
+    assignSliceToMove("jump_p1", detectedRows[7].slice(0, 2));
+    assignSliceToMove("jump_p2", detectedRows[7].slice(2, 4));
+    assignSliceToMove("jump_p3", detectedRows[7].slice(4, 6));
+  }
+  if (detectedRows[8]) {
+    assignSliceToMove("jump_k1", detectedRows[8].slice(0, 2));
+    assignSliceToMove("jump_k2", detectedRows[8].slice(2, 4));
+    assignSliceToMove("jump_k3", detectedRows[8].slice(4, 6));
+  }
+  
+  if (detectedRows[9]) assignSliceToMove("special-1", detectedRows[9].slice(0, 3));
+
+  if (detectedRows[10]) {
+    assignSliceToMove("hit-sln", detectedRows[10].slice(0, 2));
+    if (detectedRows[10].length > 2) assignSliceToMove("hit-trip", detectedRows[10].slice(2, 5));
+  }
+  if (detectedRows[11]) {
+    assignSliceToMove("down", detectedRows[11].slice(0, 1));
+    if (detectedRows[11].length > 1) assignSliceToMove("getup", detectedRows[11].slice(1, 4));
+  }
+  if (detectedRows[12]) assignSliceToMove("win", detectedRows[12].slice(0, 3));
+
+  markHitActive("p1", 1, 10, 8); markHitActive("p2", 1, 15, 10); markHitActive("p3", 1, 20, 12);
+  markHitActive("k1", 1, 10, 8); markHitActive("k2", 1, 15, 10); markHitActive("k3", 1, 20, 12);
+  markHitActive("c-p1", 1, 10, 8); markHitActive("c-p2", 1, 15, 10); markHitActive("c-p3", 1, 20, 12);
+  markHitActive("c-k1", 1, 10, 8); markHitActive("c-k2", 1, 15, 10); markHitActive("c-k3", 1, 20, 14);
+  markHitActive("jump_p1", 1, 10, 8); markHitActive("jump_p2", 1, 15, 10); markHitActive("jump_p3", 1, 20, 12);
+  markHitActive("jump_k1", 1, 10, 8); markHitActive("jump_k2", 1, 15, 10); markHitActive("jump_k3", 1, 20, 12);
+  markHitActive("special-1", 1, 25, 16);
+
+  MOVES.forEach(m => autoStabilizeMoveBaseline(m.id));
+
+  buildMovesSidebar();
+  selectMove("stance");
+  drawSheetCanvas();
+  renderMiniPreview();
+  alert("Smart Mapping complete!");
+}
+
+function assignSliceToMove(moveId, boxList) {
+  const m = MOVES.find(x => x.id === moveId);
+  if (!m || !boxList.length) return;
+  m.frames = boxList.length;
+  boxList.forEach((box, i) => {
+    assignedSprites[`${moveId}_${i}`] = {
+      x: box.x, y: box.y, w: box.w, h: box.h,
+      offX: box.offX || 0,
+      offY: box.offY || 0,
+      hit: !!box.hit,
+      damage: box.damage || 15,
+      stun: box.stun || 10
+    };
+  });
+}
+
+function markHitActive(moveId, frameIdx, dmg, stun) {
+  const key = `${moveId}_${frameIdx}`;
+  if (assignedSprites[key]) {
+    assignedSprites[key].hit = true;
+    assignedSprites[key].damage = dmg;
+    assignedSprites[key].stun = stun;
+  }
+}
+
+function autoStabilizeMoveBaseline(moveId) {
+  const m = MOVES.find(x => x.id === moveId);
+  if (!m) return;
+  
+  let baseH = 132;
+  const s0 = assignedSprites["stance_0"];
+  if (s0) baseH = s0.h;
+
+  for (let i = 0; i < m.frames; i++) {
+    const b = assignedSprites[`${moveId}_${i}`];
+    if (b) {
+      b.offY = (baseH - b.h);
+    }
+  }
+}
+
+function autoStabilizeCurrentMove() {
+  autoStabilizeMoveBaseline(currentMove);
+  loadActiveFrameDetails();
+  renderMiniPreview();
+}
+
+function resetFrameOffsets() {
+  const m = MOVES.find(x => x.id === currentMove);
+  if (!m) return;
+  for (let i = 0; i < m.frames; i++) {
+    const b = assignedSprites[`${currentMove}_${i}`];
+    if (b) { b.offX = 0; b.offY = 0; }
+  }
+  loadActiveFrameDetails();
+  renderMiniPreview();
+}
+
+function loadActiveFrameDetails() {
+  const key = `${currentMove}_${currentSlot}`;
+  const b = assignedSprites[key];
+  if (b) {
+    document.getElementById("lblCurOffsetY").innerText = (b.offY || 0) + "px";
+    document.getElementById("rngFrameOffsetY").value = b.offY || 0;
+    document.getElementById("lblCurOffsetX").innerText = (b.offX || 0) + "px";
+    document.getElementById("rngFrameOffsetX").value = b.offX || 0;
+    document.getElementById("chkFrameIsHit").checked = !!b.hit;
+    document.getElementById("numDamage").value = b.damage || 15;
+    document.getElementById("numStun").value = b.stun || 10;
+  }
+}
+
+function adjustActiveFrameOffset(axis, val) {
+  const key = `${currentMove}_${currentSlot}`;
+  if (!assignedSprites[key]) return;
+  if (axis === 'y') {
+    assignedSprites[key].offY = val;
+    document.getElementById("lblCurOffsetY").innerText = val + "px";
+  } else {
+    assignedSprites[key].offX = val;
+    document.getElementById("lblCurOffsetX").innerText = val + "px";
+  }
+  renderMiniPreview();
+}
+
+function toggleActiveFrameHit(isHit) {
+  const key = `${currentMove}_${currentSlot}`;
+  if (assignedSprites[key]) assignedSprites[key].hit = isHit;
+}
+
+function setActiveFrameProp(prop, val) {
+  const key = `${currentMove}_${currentSlot}`;
+  if (assignedSprites[key]) assignedSprites[key][prop] = val;
+}
+
+/* =========================================================================
+   6. SHEET SLICER CANVAS & PREVIEW
+   ========================================================================= */
+function resizeSheetCanvas() {
+  if (!sheetCanvas || !sheetViewport) return;
+  sheetCanvas.width = sheetViewport.clientWidth;
+  sheetCanvas.height = sheetViewport.clientHeight;
+  drawSheetCanvas();
+}
+
+function resetZoom() {
+  if (!sheetReady) return;
+  zoom = Math.min((sheetCanvas.width - 60) / sheetImg.width, (sheetCanvas.height - 60) / sheetImg.height, 1);
+  panX = (sheetCanvas.width - sheetImg.width * zoom) / 2;
+  panY = (sheetCanvas.height - sheetImg.height * zoom) / 2;
+  document.getElementById("lblZoom").innerText = Math.round(zoom * 100) + "%";
+  drawSheetCanvas();
+}
+
+function changeZoom(factor) {
+  zoom = Math.max(0.15, Math.min(4.0, zoom * factor));
+  document.getElementById("lblZoom").innerText = Math.round(zoom * 100) + "%";
+  drawSheetCanvas();
+}
+
+function setupSheetEvents() {
+  window.addEventListener("keydown", e => {
+    if (e.code === "Space") spaceKey = true;
+    if (e.code === "Delete" || e.code === "Backspace") deleteSelectedBox();
+  });
+  window.addEventListener("keyup", e => {
+    if (e.code === "Space") spaceKey = false;
+  });
+
+  sheetCanvas.addEventListener("mousedown", e => {
+    const rect = sheetCanvas.getBoundingClientRect();
+    const mx = e.clientX - rect.left;
+    const my = e.clientY - rect.top;
+
+    if (spaceKey || e.button === 1) {
+      isPanning = true;
+      startPanX = mx - panX;
+      startPanY = my - panY;
+      return;
+    }
+
+    const wx = (mx - panX) / zoom;
+    const wy = (my - panY) / zoom;
+
+    for (let i = 0; i < detectedBoxes.length; i++) {
+      const b = detectedBoxes[i];
+      if (wx >= b.x && wx <= b.x + b.w && wy >= b.y && wy <= b.y + b.h) {
+        selectedBox = { ...b };
+        assignBoxToActiveSlot(selectedBox);
+        drawSheetCanvas();
+        return;
+      }
+    }
+  });
+
+  window.addEventListener("mousemove", e => {
+    if (isPanning) {
+      const rect = sheetCanvas.getBoundingClientRect();
+      panX = (e.clientX - rect.left) - startPanX;
+      panY = (e.clientY - rect.top) - startPanY;
+      drawSheetCanvas();
+    }
+  });
+
+  window.addEventListener("mouseup", () => { isPanning = false; });
+
+  sheetCanvas.addEventListener("wheel", e => {
+    e.preventDefault();
+    changeZoom(e.deltaY < 0 ? 1.15 : 0.85);
+  });
+}
+
+function assignBoxToActiveSlot(box) {
+  const key = `${currentMove}_${currentSlot}`;
+  assignedSprites[key] = {
+    x: box.x, y: box.y, w: box.w, h: box.h,
+    offX: 0, offY: 0,
+    hit: false, damage: 15, stun: 10
+  };
+  const m = MOVES.find(x => x.id === currentMove);
+  if (currentSlot < m.frames - 1) currentSlot++;
+  buildMovesSidebar();
+  loadActiveFrameDetails();
+  renderMiniPreview();
+}
+
+function splitSelectedBox(parts) {
+  if (!selectedBox) return;
+  const idx = detectedBoxes.findIndex(b => b.x === selectedBox.x && b.y === selectedBox.y);
+  if (idx === -1) return;
+
+  const orig = detectedBoxes[idx];
+  detectedBoxes.splice(idx, 1);
+  const partW = Math.floor(orig.w / parts);
+
+  for (let p = 0; p < parts; p++) {
+    detectedBoxes.push({
+      x: orig.x + p * partW,
+      y: orig.y,
+      w: partW,
+      h: orig.h,
+      offX: 0, offY: 0, hit: false, damage: 15, stun: 10
+    });
+  }
+  clusterIntoRows();
+  selectedBox = null;
+  drawSheetCanvas();
+}
+
+function deleteSelectedBox() {
+  if (!selectedBox) return;
+  detectedBoxes = detectedBoxes.filter(b => !(b.x === selectedBox.x && b.y === selectedBox.y));
+  Object.keys(assignedSprites).forEach(k => {
+    const ab = assignedSprites[k];
+    if (ab.x === selectedBox.x && ab.y === selectedBox.y) delete assignedSprites[k];
+  });
+  selectedBox = null;
+  clusterIntoRows();
+  buildMovesSidebar();
+  drawSheetCanvas();
+  renderMiniPreview();
+}
+
+function assignRowToActiveMove() {
+  if (!selectedBox) {
+    alert("Select any sprite box in the target row first!");
+    return;
+  }
+  const rowY = selectedBox.y;
+  const rowBoxes = detectedBoxes.filter(b => Math.abs(b.y - rowY) < 38).sort((a,b) => a.x - b.x);
+  assignSliceToMove(currentMove, rowBoxes);
+  buildMovesSidebar();
+  drawSheetCanvas();
+  renderMiniPreview();
+}
+
+function drawSheetCanvas() {
+  sctx.clearRect(0, 0, sheetCanvas.width, sheetCanvas.height);
+  if (!sheetReady) {
+    sctx.fillStyle = "#666";
+    sctx.font = "14px monospace";
+    sctx.textAlign = "center";
+    sctx.fillText("Upload Spritesheet PNG to begin slice & mapping", sheetCanvas.width / 2, sheetCanvas.height / 2);
+    return;
+  }
+
+  sctx.save();
+  sctx.translate(panX, panY);
+  sctx.scale(zoom, zoom);
+  sctx.drawImage(sheetImg, 0, 0);
+
+  detectedBoxes.forEach(b => {
+    sctx.strokeStyle = "rgba(46, 213, 115, 0.4)";
+    sctx.lineWidth = 1 / zoom;
+    sctx.strokeRect(b.x, b.y, b.w, b.h);
+  });
+
+  Object.keys(assignedSprites).forEach(k => {
+    const b = assignedSprites[k];
+    sctx.strokeStyle = "#2ed573";
+    sctx.lineWidth = 2 / zoom;
+    sctx.strokeRect(b.x, b.y, b.w, b.h);
+    sctx.fillStyle = "#2ed573";
+    sctx.font = `bold ${Math.max(9, 10 / zoom)}px monospace`;
+    sctx.fillText(k, b.x, b.y - 2);
+  });
+
+  if (selectedBox) {
+    sctx.strokeStyle = "#ff4757";
+    sctx.lineWidth = 2.5 / zoom;
+    sctx.strokeRect(selectedBox.x, selectedBox.y, selectedBox.w, selectedBox.h);
+  }
+
+  sctx.restore();
+}
+
+function togglePlayPreview() {
+  isPreviewPlaying = !isPreviewPlaying;
+  document.getElementById("btnPlayPause").innerText = isPreviewPlaying ? "Pause" : "Play";
+}
+
+function renderMiniPreview() {
+  mctx.clearRect(0, 0, miniCanvas.width, miniCanvas.height);
+  const m = MOVES.find(x => x.id === currentMove);
+  if (!m || !sheetReady) return;
+
+  const key = `${currentMove}_${previewFrame}`;
+  const box = assignedSprites[key] || assignedSprites[`${currentMove}_0`];
+  if (!box) {
+    mctx.fillStyle = "#444";
+    mctx.font = "11px monospace";
+    mctx.textAlign = "center";
+    mctx.fillText(`[${currentMove}] Frame ${previewFrame} Empty`, miniCanvas.width / 2, miniCanvas.height / 2);
+    return;
+  }
+
+  mctx.strokeStyle = "#ff475744";
+  mctx.beginPath();
+  mctx.moveTo(0, miniCanvas.height - 15);
+  mctx.lineTo(miniCanvas.width, miniCanvas.height - 15);
+  mctx.stroke();
+
+  const previewScale = Math.min((miniCanvas.width - 24) / (box.w * globalScale), (miniCanvas.height - 30) / (box.h * globalScale));
+  const finalScale = previewScale * globalScale;
+
+  const dw = box.w * finalScale;
+  const dh = box.h * finalScale;
+  const dx = (miniCanvas.width - dw) / 2 + (box.offX || 0) * previewScale;
+  const dy = (miniCanvas.height - 15) - dh - (box.offY || 0) * previewScale;
+
+  mctx.drawImage(sheetImg, box.x, box.y, box.w, box.h, dx, dy, dw, dh);
+
+  if (box.hit) {
+    mctx.strokeStyle = "rgba(255, 71, 87, 0.85)";
+    mctx.lineWidth = 2;
+    mctx.strokeRect(dx + dw * 0.2, dy + dh * 0.2, dw * 0.7, dh * 0.4);
+  }
+}
+
+/* =========================================================================
+   7. ARENA INTERACTION LOGIC
+   ========================================================================= */
+function setupArenaInputs() {
+  window.addEventListener("keydown", e => {
+    const k = e.key.toUpperCase();
+    keys[k] = true;
+    if (["ARROWUP","ARROWDOWN","ARROWLEFT","ARROWRIGHT"," "].includes(k)) e.preventDefault();
+  });
+  window.addEventListener("keyup", e => {
+    keys[e.key.toUpperCase()] = false;
+  });
+}
+
+function updateArena() {
+  if (P1.hitCooldown > 0) P1.hitCooldown--;
+  if (P1.stunTicks > 0) P1.stunTicks--;
+  if (Dummy.hitFlash > 0) Dummy.hitFlash--;
+  if (Dummy.stunTimer > 0) Dummy.stunTimer--;
+
+  if (!P1.isAirborne && P1.state !== "laser" && P1.state !== "special-1") {
+    P1.direction = (P1.x < Dummy.x) ? -1 : 1;
+  }
+  Dummy.direction = (Dummy.x < P1.x) ? 1 : -1;
+
+  const isAttacking = [
+    "p1","p2","p3","k1","k2","k3",
+    "c-p1","c-p2","c-p3","c-k1","c-k2","c-k3",
+    "jump_p1","jump_p2","jump_p3","jump_k1","jump_k2","jump_k3",
+    "special-1"
+  ].includes(P1.state);
+
+  const isCrouching = keys["ARROWDOWN"];
+
+  if (P1.isAirborne && !isAttacking && P1.stunTicks === 0) {
+      if (keys["A"]) triggerAttack("jump_p1");
+      else if (keys["S"]) triggerAttack("jump_p2");
+      else if (keys["D"]) triggerAttack("jump_p3");
+      else if (keys["Z"]) triggerAttack("jump_k1");
+      else if (keys["X"]) triggerAttack("jump_k2");
+      else if (keys["C"]) triggerAttack("jump_k3");
+  } 
+  else if (!P1.isAirborne && !isAttacking && P1.stunTicks === 0) {
+    if (isCrouching) {
+      if (keys["A"]) triggerAttack("c-p1");
+      else if (keys["S"]) triggerAttack("c-p2");
+      else if (keys["D"]) triggerAttack("c-p3");
+      else if (keys["Z"]) triggerAttack("c-k1");
+      else if (keys["X"]) triggerAttack("c-k2");
+      else if (keys["C"]) triggerAttack("c-k3");
+      else {
+        P1.state = "crouch";
+        P1.vx = 0;
+      }
+    } else {
+      if (keys["A"]) triggerAttack("p1");
+      else if (keys["S"]) triggerAttack("p2");
+      else if (keys["D"]) triggerAttack("p3");
+      else if (keys["Z"]) triggerAttack("k1");
+      else if (keys["X"]) triggerAttack("k2");
+      else if (keys["C"]) triggerAttack("k3");
+      else if (keys["Q"]) triggerAttack("special-1");
+      else if (keys["ARROWUP"]) {
+        P1.isAirborne = true;
+        P1.jumpT = 0;
+        P1.jumpVy = ARENA.jumpVy;
+        P1.state = "jump";
+        P1.frameIdx = 0;
+        P1.timer = 0;
+
+        if (keys["ARROWRIGHT"]) {
+          P1.jumpVx = (P1.direction === -1) ? ARENA.jumpVx : -ARENA.jumpVx;
+        } else if (keys["ARROWLEFT"]) {
+          P1.jumpVx = (P1.direction === -1) ? -ARENA.jumpVx : ARENA.jumpVx;
+        } else {
+          P1.jumpVx = 0;
+        }
+      } else if (keys["ARROWRIGHT"]) {
+        const isForward = (P1.direction === -1);
+        P1.state = isForward ? "f-walk" : "b-walk";
+        P1.vx = isForward ? 4.0 : -3.0;
+      } else if (keys["ARROWLEFT"]) {
+        const isForward = (P1.direction === 1);
+        P1.state = isForward ? "f-walk" : "b-walk";
+        P1.vx = isForward ? -4.0 : 3.0;
+      } else {
+        P1.state = "stance";
+        P1.vx = 0;
+      }
+    }
+  }
+
+  if (P1.isAirborne) {
+    P1.jumpT += P1.jumpSpeed;
+    const curY = ((P1.jumpVy * P1.jumpT) - (CONSTANTS.HALF_G * P1.jumpT * P1.jumpT)) * CONSTANTS.Y_DAMPING;
+    P1.y = Math.max(0, curY);
+
+    const dx = P1.jumpVx * CONSTANTS.X_DAMPING * P1.jumpSpeed;
+    P1.x += (P1.direction === -1) ? dx : -dx;
+
+    if (!isAttacking) {
+        if (P1.jumpT < 12) P1.frameIdx = 0;
+        else if (P1.jumpT < 26) P1.frameIdx = 1;
+        else if (P1.jumpT < 40) P1.frameIdx = 2;
+        else P1.frameIdx = 3;
+    }
+
+    if (P1.jumpT > 5 && P1.y <= 0) {
+      P1.y = 0;
+      P1.jumpT = 0;
+      P1.jumpVx = 0;
+      P1.isAirborne = false;
+      P1.state = isCrouching ? "crouch" : "stance";
+      P1.frameIdx = 0;
+      P1.timer = 0;
+    }
+  } else if (!isAttacking) {
+    P1.x += P1.vx;
+  }
+
+  P1.x = Math.max(60, Math.min(stageCanvas.width - 60, P1.x));
+  Dummy.x = Math.max(60, Math.min(stageCanvas.width - 60, Dummy.x));
+
+  const m = MOVES.find(x => x.id === P1.state) || MOVES[0];
+  P1.timer++;
+  if (P1.timer >= m.speed) {
+    P1.timer = 0;
+    if (!P1.isAirborne || isAttacking) {
+      P1.frameIdx++;
+      if (P1.frameIdx >= m.frames) {
+        if (isAttacking || P1.state === "hit-sln" || P1.state === "getup") {
+          if (P1.isAirborne) {
+              P1.state = "jump";
+              P1.frameIdx = 3; 
+          } else {
+              P1.state = keys["ARROWDOWN"] ? "crouch" : "stance";
+              P1.frameIdx = 0;
+          }
+        } else if (m.loop) {
+          P1.frameIdx = 0;
+        } else {
+          P1.frameIdx = m.frames - 1;
+        }
+      }
+    }
+  }
+
+  if (isAttacking) {
+    const key = `${P1.state}_${P1.frameIdx}`;
+    const box = assignedSprites[key];
+    
+    if (P1.state === "special-1" && P1.frameIdx === 1 && P1.hitCooldown === 0) {
+        Dummy.hp = Math.max(0, Dummy.hp - 25);
+        Dummy.hitFlash = 12;
+        Dummy.stunTimer = 20;
+        Dummy.x += (P1.direction === -1) ? 30 : -30;
+        P1.hitCooldown = 30;
+        updateDummyHUD();
+    }
+    else if (box && box.hit && P1.hitCooldown === 0) {
+      const scaledW = box.w * globalScale;
+      const reachMod = P1.isAirborne ? 0.8 : 0.6;
+      const reachX = (P1.direction === -1) ? P1.x + (scaledW * reachMod) : P1.x - (scaledW * reachMod);
+
+      if (Math.abs(reachX - Dummy.x) < 90) {
+        const damage = box.damage || 15;
+        Dummy.hp = Math.max(0, Dummy.hp - damage);
+        Dummy.hitFlash = 8;
+        Dummy.stunTimer = box.stun || 10;
+        Dummy.x += (P1.direction === -1) ? 20 : -20; 
+        P1.hitCooldown = 22;
+        updateDummyHUD();
+      }
+    }
+  }
+}
+
+function updateDummyHUD() {
+    document.getElementById("hpBarDummy").style.width = Dummy.hp + "%";
+    document.getElementById("lblDummyHpVal").innerText = Dummy.hp + "%";
+}
+
+function triggerAttack(moveId) {
+  P1.state = moveId;
+  P1.frameIdx = 0;
+  P1.timer = 0;
+  P1.vx = 0;
+}
+
+function resetArenaMatch() {
+  P1.x = 180; P1.y = 0; P1.jumpT = 0; P1.vx = 0;
+  P1.hp = 100; P1.state = "stance"; P1.isAirborne = false;
+  Dummy.x = 520; Dummy.hp = 100; Dummy.hitFlash = 0;
+
+  document.getElementById("hpBarP1").style.width = "100%";
+  document.getElementById("lblP1HpVal").innerText = "100%";
+  updateDummyHUD();
+}
+
+function drawArena() {
+  actx.clearRect(0, 0, stageCanvas.width, stageCanvas.height);
+
+  if (document.getElementById("chkFloorLine").checked) {
+    actx.strokeStyle = "rgba(255, 71, 87, 0.7)";
+    actx.lineWidth = 3;
+    actx.beginPath();
+    actx.moveTo(0, GROUND_Y);
+    actx.lineTo(stageCanvas.width, GROUND_Y);
+    actx.stroke();
+  }
+
+  drawDummyOpponent();
+  drawPlayerFighter();
+}
+
+function drawPlayerFighter() {
+  const m = MOVES.find(x => x.id === P1.state) || MOVES[0];
+  const key = `${P1.state}_${P1.frameIdx}`;
+  const box = assignedSprites[key] || assignedSprites[`${P1.state}_0`] || assignedSprites["crouch_0"] || {x:0, y:0, w:72, h:132, offX:0, offY:0};
+
+  const scaledW = box.w * globalScale;
+  const scaledH = box.h * globalScale;
+  const offX = (box.offX || 0) * globalScale;
+  const offY = (box.offY || 0) * globalScale;
+
+  const renderX = P1.x + ((P1.direction === -1 ? 1 : -1) * offX);
+  const renderY = GROUND_Y - P1.y - scaledH - offY;
+
+  // Floor Shadow
+  actx.fillStyle = "rgba(0,0,0,0.45)";
+  actx.beginPath();
+  actx.ellipse(P1.x, GROUND_Y, 38 * globalScale * 0.5, 10, 0, 0, Math.PI * 2);
+  actx.fill();
+
+  // LASER BEAM VISUAL
+  if (P1.state === "special-1" && P1.frameIdx === 1) {
+      actx.save();
+      actx.fillStyle = "rgba(255, 0, 0, 0.9)";
+      actx.shadowColor = "#ffea00";
+      actx.shadowBlur = 20;
+      
+      const beamY = renderY + (scaledH * 0.22);
+      if (P1.direction === -1) {
+          actx.fillRect(renderX + (scaledW * 0.2), beamY, 800, 16);
+      } else {
+          actx.fillRect(renderX - (scaledW * 0.2) - 800, beamY, 800, 16);
+      }
+      actx.restore();
+  }
+
+  if (sheetReady) {
+    actx.save();
+    const invertFlip = document.getElementById("chkInvertFlip").checked;
+    const shouldFlip = (P1.direction === -1) ? invertFlip : !invertFlip;
+
+    if (shouldFlip) {
+      actx.translate(renderX, 0);
+      actx.scale(-1, 1);
+      actx.drawImage(sheetImg, box.x, box.y, box.w, box.h, -scaledW/2, renderY, scaledW, scaledH);
+    } else {
+      actx.drawImage(sheetImg, box.x, box.y, box.w, box.h, renderX - scaledW/2, renderY, scaledW, scaledH);
+    }
+    actx.restore();
+  } else {
+    actx.fillStyle = "#1e90ff";
+    actx.fillRect(renderX - scaledW/2, renderY, scaledW, scaledH);
+    actx.fillStyle = "#fff";
+    actx.font = "11px monospace";
+    actx.fillText("No Sheet", renderX - 25, renderY + scaledH/2);
+  }
+
+  // Hitbox Debugger
+  if (document.getElementById("chkHitboxes").checked) {
+    actx.strokeStyle = "rgba(46, 213, 115, 0.85)";
+    actx.lineWidth = 2;
+    actx.strokeRect(renderX - (scaledW * 0.35), renderY, scaledW * 0.7, scaledH);
+
+    if (box.hit) {
+      actx.strokeStyle = "rgba(255, 71, 87, 0.95)";
+      actx.lineWidth = 2.5;
+      const isLowAttack = P1.state.startsWith("c-");
+      const isAirAttack = P1.state.startsWith("jump_");
+      
+      const hitX = (P1.direction === -1) ? renderX + (scaledW * 0.1) : renderX - (scaledW * 0.6);
+      
+      let hitY = renderY + (scaledH * 0.15);
+      if (isLowAttack) hitY = renderY + (scaledH * 0.45);
+      if (isAirAttack) hitY = renderY + (scaledH * 0.6);
+
+      actx.strokeRect(hitX, hitY, scaledW * 0.5, scaledH * 0.35);
+    }
+  }
+
+  const charLabel = document.getElementById("charName").value.toUpperCase();
+  actx.fillStyle = "#fff";
+  actx.font = "11px monospace";
+  actx.fillText(`${charLabel} [${P1.state}]`, renderX - 45, renderY - 10);
+}
+
+function drawDummyOpponent() {
+  const dx = Dummy.x - (Dummy.w / 2);
+  const dy = GROUND_Y - Dummy.h;
+
+  actx.fillStyle = "rgba(0,0,0,0.45)";
+  actx.beginPath();
+  actx.ellipse(Dummy.x, GROUND_Y, 52, 12, 0, 0, Math.PI * 2);
+  actx.fill();
+
+  actx.fillStyle = (Dummy.hitFlash > 0) ? "rgba(255, 71, 87, 0.7)" : "rgba(255, 165, 2, 0.25)";
+  actx.fillRect(dx, dy, Dummy.w, Dummy.h);
+
+  actx.strokeStyle = "var(--gold)";
+  actx.lineWidth = 2;
+  actx.strokeRect(dx, dy, Dummy.w, Dummy.h);
+
+  actx.fillStyle = "var(--gold)";
+  actx.font = "bold 12px monospace";
+  actx.fillText("SAGAT DUMMY", dx + 20, dy - 8);
+}
+
+function masterLoop(timestamp) {
+  if (isPreviewPlaying && sheetReady) {
+    if (timestamp - previewTimer > 1000 / previewFps) {
+      previewTimer = timestamp;
+      const m = MOVES.find(x => x.id === currentMove);
+      if (m && m.frames > 0) {
+        previewFrame = (previewFrame + 1) % m.frames;
+        renderMiniPreview();
+      }
+    }
+  }
+
+  if (!document.getElementById("viewArena").classList.contains("hidden")) {
+    updateArena();
+    drawArena();
+  }
+
+  requestAnimationFrame(masterLoop);
+}
+
+/* =========================================================================
+   8. EXPORT CODE GENERATOR (100% ENGINE SPECIFICATION)
+   ========================================================================= */
+let activeExportTab = 1;
+
+function openExportModal() {
+  document.getElementById("exportModal").style.display = "flex";
+  showExportTab(activeExportTab);
+}
+function closeExportModal() {
+  document.getElementById("exportModal").style.display = "none";
+}
+
+function showExportTab(tabIdx) {
+  activeExportTab = tabIdx;
+  document.getElementById("tabCode1").classList.toggle("active", tabIdx === 1);
+  document.getElementById("tabCode2").classList.toggle("active", tabIdx === 2);
+
+  const char = document.getElementById("charName").value.trim().toLowerCase() || "homelander";
+  const codeBox = document.getElementById("txtExportCode");
+  codeBox.value = (tabIdx === 1) ? buildSpriteDataJS(char) : buildPlayerLogicJS(char);
+}
+
+function buildSpriteDataJS(char) {
+  const cap = char.charAt(0).toUpperCase() + char.slice(1);
+  let js = `/* Generated by Fighter Studio for ${char} */\n`;
+  js += `Create${cap}SpriteData = function(player)\n{\n`;
+  const sheetRelPath = `images/misc/${char}/sprites.png`;
+
+  Object.keys(assignedSprites).forEach(k => {
+    const b = assignedSprites[k];
+    const cleanKey = k.replace(/_/g, '-');
+    const logicalPath = `images/misc/${char}/${cleanKey}.png`;
+    js += `\tspriteLookup_.load("${logicalPath}", "${sheetRelPath}", "-${b.x}px", "-${b.y}px", "${b.w}px", "${b.h}px");\n`;
+  });
+
+  // Preserve Laser Projectiles
+  js += `\t// Scaled down to 50% size so it's not massive\n`;
+  js += `\tspriteLookup_.load("images/misc/${char}/laser-0.png", "images/misc/${char}/projectiles.png", "0px", "0px", "475px", "25px");\n`;
+  js += `\tspriteLookup_.load("images/misc/${char}/laser-1.png", "images/misc/${char}/projectiles.png", "0px", "0px", "475px", "25px");\n`;
+  js += `\tspriteLookup_.load("images/misc/${char}/laser-2.png", "images/misc/${char}/projectiles.png", "0px", "0px", "475px", "25px");\n`;
+
+  js += `};\n`;
+  js += `window.Create${cap}SpriteData = Create${cap}SpriteData;\n`;
+  js += `window.Create${char.toLowerCase()}SpriteData = Create${cap}SpriteData;\n`;
+  js += `window.Create${char.toLowerCase()}2SpriteData = Create${cap}SpriteData;\n`;
+  return js;
+}
+function gY(key, fallbackVal) {
+    return assignedSprites[key] ? assignedSprites[key].offY : fallbackVal;
+}
+
+function fCount(moveId) {
+    const m = MOVES.find(x => x.id === moveId);
+    return m ? m.frames : 3;
+}
+
+function buildPlayerLogicJS(char) {
+  const cap = char.charAt(0).toUpperCase() + char.slice(1);
+  const scale = globalScale.toFixed(2);
+  const targetH = Math.round(132 * globalScale);
+
+  return `// Character Definition for ${cap} (Fixed Hitbox & Scaling & Laser)
+var create${cap} = function(user)
+{
+    var player = new Player("${char}", 140, ${targetH}, user);
+    var folder = "images/misc/" + player.Folder;
+    var SCALE = ${scale};
+
+    // --- Dynamic Sprite Scaling ---
+    player.flip = function(isFlipped) {
+        this.IsFlipped = isFlipped;
+        if (isFlipped) {
+            this.SpriteElement.style.transform = "scaleX(" + SCALE + ") scaleY(" + SCALE + ")";
+        } else {
+            this.SpriteElement.style.transform = "scaleX(-" + SCALE + ") scaleY(" + SCALE + ")";
+        }
+    };
+    player.SpriteElement.style.transformOrigin = "bottom center";
+    player.flip(player.Direction === -1);
+
+    var originalRender = player.render;
+    player.render = function(frame, stageDiffX, stageDiffY) {
+        originalRender.call(this, frame, stageDiffX, stageDiffY);
+        if (this._nameTag) {
+            this._nameTag.style.top = "-160px";
+        }
+    };
+
+    // FIX: Scaled Hitbox so high punches connect
+    player.setImgRect = function() {
+        var imageOffsetY = (!!this.CurrentFrame ? this.CurrentFrame.ImageOffsetY : 0);
+        var imageOffsetX = (!!this.CurrentFrame ? this.CurrentFrame.ImageOffsetX : 0);
+
+        var bottom = (parseInt(this.Element.style.bottom) || 0) + imageOffsetY;
+        var rawHeight = parseInt(this.SpriteElement.style.height) || 132;
+        var rawWidth = parseInt(this.Element.style.width) || 68;
+
+        this.SpriteHeight = Math.round(rawHeight * SCALE);
+        this.SpriteWidth = Math.round(rawWidth * SCALE);
+
+        this.TopOffset = bottom + this.SpriteHeight - this.ClipHitTop;
+        this.BottomOffset = bottom + this.ClipHitBottom;
+        this.BottomNoOffset = bottom;
+
+        if (this.Direction > 0) {
+            var right = STAGE.MAX_STAGEX - (parseInt(this.Element.style.right) || 0);
+            this.LeftOffset = right - this.SpriteWidth + this.ClipHitFront;
+            this.RightOffset = right - this.ClipHitBack - imageOffsetX;
+            this.LeftNoOffset = this.LeftOffset;
+            this.RightNoOffset = this.RightOffset + imageOffsetX;
+        } else {
+            var left = (parseInt(this.Element.style.left) || 0);
+            this.LeftOffset = left + this.ClipHitBack + imageOffsetX;
+            this.RightOffset = left + this.SpriteWidth - this.ClipHitFront;
+            this.LeftNoOffset = this.LeftOffset - imageOffsetX;
+            this.RightNoOffset = this.RightOffset;
+        }
+
+        this.ImgBBox.Left = this.LeftOffset;
+        this.ImgBBox.Right = this.RightOffset;
+        this.ImgBBox.Top = this.TopOffset;
+        this.ImgBBox.Bottom = this.BottomOffset;
+        this.ImgBBox.BottomNoOffset = this.BottomNoOffset;
+        this.ImgBBox.LeftNoOffset = this.LeftNoOffset;
+        this.ImgBBox.RightNoOffset = this.RightNoOffset;
+    };
+
+    player.DefaultJumpSpeed = 1.2;
+    player.BlockDistanceSq = 120000;
+    player.BlockDistanceSq2 = 150000;
+    player.StandingClip.Top = 80;
+    player.StandingClip.Back = 30;
+    player.StandingClip.Front = 25;
+    player.DefaultShadowOffset = 0;
+    player.Circle.OffsetY = 40;
+
+    var f = function(name, idx) { return folder + "/" + name + "-" + idx + ".png"; };
+
+    // --- STANCE ---
+    var stance = player.addAnimation(MISC_FLAGS.NONE, "stance", 0, ["stance"], 0, false);
+    stance.Flags = ({Player: PLAYER_FLAGS.ALLOW_CHANGE_DIRECTION | PLAYER_FLAGS.HOLD_ZINDEX, Pose: POSE_FLAGS.STANDING});
+    for(var i = 0; i < 4; i++) {
+        stance.addRepeatingFrame(player, 0, "", f("stance", i), 5, i === 0 ? {Player: PLAYER_FLAGS.MOBILE} : MISC_FLAGS.NONE);
+    }
+
+    // --- WALKING ---
+    var f_walk = player.addAnimation(POSE_FLAGS.STANDING, "f-walk", 0, [BUTTONS.FORWARD], 90, false);
+    f_walk.ButtonSequence.push([{Button: BUTTONS.BACK, State: BUTTON_STATE.NONE}, {Button: BUTTONS.FORWARD, State: BUTTON_STATE.PRESSED}]);
+    f_walk.ButtonCount = 1;
+    f_walk.Flags = ({Player: PLAYER_FLAGS.LOOP_IF_KEYDOWN, Pose: POSE_FLAGS.WALKING_FORWARD});
+    for(var i = 0; i < 6; i++) {
+        f_walk.addRepeatingFrame(player, 0, "", f("f-walk", i), 4, i === 0 ? {Player: PLAYER_FLAGS.MOBILE} : {Player: PLAYER_FLAGS.MUST_HOLD_KEY}, MISC_FLAGS.NONE, 4);
+    }
+
+    var b_walk = player.addAnimation(POSE_FLAGS.STANDING, "b-walk", 0, [BUTTONS.BACK], 80, false);
+    b_walk.ButtonSequence.push([{Button: BUTTONS.FORWARD, State: BUTTON_STATE.NONE}, {Button: BUTTONS.BACK, State: BUTTON_STATE.PRESSED}]);
+    b_walk.ButtonCount = 1;
+    b_walk.Flags = ({Player: PLAYER_FLAGS.LOOP_IF_KEYDOWN, Pose: POSE_FLAGS.WALKING_BACKWARD});
+    for(var i = 0; i < 4; i++) {
+        b_walk.addRepeatingFrame(player, 0, "", f("b-walk", i), 4, i === 0 ? {Player: PLAYER_FLAGS.MOBILE} : {Player: PLAYER_FLAGS.MUST_HOLD_KEY}, MISC_FLAGS.NONE, -3);
+    }
+
+    // --- CROUCH & BLOCKS ---
+    var crouch = player.addAnimation(POSE_FLAGS.STANDING, "crouch", 5, [BUTTONS.CROUCH], 99, false);
+    crouch.ButtonSequence.push([{Button: BUTTONS.CROUCH, State: BUTTON_STATE.PRESSED}]);
+    crouch.ButtonCount = 1;
+    crouch.Flags = ({Player: PLAYER_FLAGS.ALLOW_CHANGE_DIRECTION, Pose: POSE_FLAGS.CROUCHING});
+    for(var i = 0; i < 3; i++) {
+        crouch.addFrame(player, 0, "", f("crouch", i), 2, i === 0 ? {Player: PLAYER_FLAGS.MOBILE} : {Player: PLAYER_FLAGS.HOLD_FRAME});
+    }
+
+    var block = player.addAnimation(POSE_FLAGS.STANDING | POSE_FLAGS.ALLOW_BLOCK, "block", 0, [BUTTONS.BACK], -2, false);
+    block.ButtonSequence.push([{Button: BUTTONS.BACK, State: BUTTON_STATE.PRESSED}]);
+    block.ButtonCount = 1;
+    block.Flags = ({Player: PLAYER_FLAGS.BLOCKING});
+    block.addFrame(player, 0, "", f("stance", 0), CONSTANTS.FRAME_MAX, {Player: PLAYER_FLAGS.BLOCKING});
+
+    var cblock = player.addAnimation(POSE_FLAGS.CROUCHING | POSE_FLAGS.ALLOW_BLOCK, "crouch block", 0, [BUTTONS.CROUCH, BUTTONS.BACK], -1, false);
+    cblock.ButtonSequence.push([{Button: BUTTONS.CROUCH, State: BUTTON_STATE.PRESSED}, {Button: BUTTONS.BACK, State: BUTTON_STATE.PRESSED}]);
+    cblock.ButtonCount = 1;
+    cblock.Flags = ({Player: PLAYER_FLAGS.BLOCKING, Pose: POSE_FLAGS.CROUCHING});
+    cblock.addFrame(player, 0, "", f("crouch", 1), CONSTANTS.FRAME_MAX, {Player: PLAYER_FLAGS.BLOCKING});
+
+    var ablock = player.addAnimation(POSE_FLAGS.AIRBORNE | POSE_FLAGS.ALLOW_AIR_BLOCK, "air block", 0, [BUTTONS.BACK], -1, false);
+    ablock.ButtonSequence.push([{Button: BUTTONS.BACK, State: BUTTON_STATE.PRESSED}]);
+    ablock.ButtonCount = 1;
+    ablock.Flags = ({Player: PLAYER_FLAGS.BLOCKING});
+    ablock.addFrame(player, 0, "", f("jump", 1), CONSTANTS.FRAME_MAX, {Player: PLAYER_FLAGS.BLOCKING});
+
+    // --- TURNING & LANDING ---
+    var turn = player.addAnimation(POSE_FLAGS.STANDING, "turn", 0, ["turn"], 0, false);
+    turn.ButtonCount = 1;
+    turn.Flags = ({Player: PLAYER_FLAGS.HOLD_ZINDEX, Pose: POSE_FLAGS.STANDING});
+    turn.addFrame(player, 0, "", f("stance", 1), 2, {Player: PLAYER_FLAGS.MOBILE});
+    turn.addFrame(player, 0, "", f("stance", 0), 2);
+
+    var cturn = player.addAnimation(POSE_FLAGS.CROUCHING, "crouch turn", 0, ["turn"], 0, false);
+    cturn.ButtonCount = 1;
+    cturn.Flags = ({Player: PLAYER_FLAGS.HOLD_ZINDEX, Pose: POSE_FLAGS.CROUCHING});
+    cturn.addFrame(player, 0, "", f("crouch", 1), 3, {Player: PLAYER_FLAGS.MOBILE});
+    cturn.chain(crouch, 1);
+
+    var jump_land = player.addAnimation(MISC_FLAGS.NONE, "jump land", 0, ["jump-land"], 0, false);
+    jump_land.addFrame(player, 0, "", f("crouch", 0), 2, {Player: PLAYER_FLAGS.MOBILE});
+
+    // --- JUMPING MECHANICS ---
+    var jump = player.addAnimation(POSE_FLAGS.STANDING | POSE_FLAGS.WALKING_FORWARD | POSE_FLAGS.WALKING_BACKWARD, "jump", 0, [BUTTONS.JUMP], 95, false);
+    jump.ButtonSequence.push([{Button: BUTTONS.JUMP, State: BUTTON_STATE.PRESSED}, {Button: BUTTONS.BACK, State: BUTTON_STATE.NONE}, {Button: BUTTONS.FORWARD, State: BUTTON_STATE.NONE}]);
+    jump.ButtonCount = 1;
+    jump.UseJumpSpeed = true;
+    jump.Vy = ${ARENA.jumpVy};
+    jump.addRepeatingFrame(player, 0, "", f("crouch", 0), 3);
+    jump.addRepeatingFrame(player, 0, "", f("jump", 0), 6, {Pose: POSE_FLAGS.AIRBORNE});
+    jump.addRepeatingFrame(player, 0, "", f("jump", 1), 8);
+    jump.addRepeatingFrame(player, 0, "", f("jump", 2), 8);
+    jump.addRepeatingFrame(player, 0, "", f("jump", 3), CONSTANTS.FRAME_MAX);
+    jump.chain(jump_land);
+
+    var f_jump = player.addAnimation(POSE_FLAGS.STANDING | POSE_FLAGS.WALKING_FORWARD | POSE_FLAGS.WALKING_BACKWARD, "forward jump", 0, [BUTTONS.FORWARD, BUTTONS.JUMP], 95, false);
+    f_jump.ButtonSequence.push([{Button: BUTTONS.BACK, State: BUTTON_STATE.NONE}, {Button: BUTTONS.JUMP, State: BUTTON_STATE.PRESSED}, {Button: BUTTONS.FORWARD, State: BUTTON_STATE.PRESSED}]);
+    f_jump.ButtonCount = 2;
+    f_jump.UseJumpSpeed = true;
+    f_jump.Vx = ${ARENA.jumpVx}; f_jump.Vy = ${ARENA.jumpVy};
+    f_jump.addRepeatingFrame(player, 0, "", f("crouch", 0), 3);
+    f_jump.addRepeatingFrame(player, 0, "", f("jump", 0), 6, {Pose: POSE_FLAGS.AIRBORNE_FB});
+    f_jump.addRepeatingFrame(player, 0, "", f("jump", 1), 8);
+    f_jump.addRepeatingFrame(player, 0, "", f("jump", 2), 8);
+    f_jump.addRepeatingFrame(player, 0, "", f("jump", 3), CONSTANTS.FRAME_MAX);
+    f_jump.chain(jump_land);
+
+    var b_jump = player.addAnimation(POSE_FLAGS.STANDING | POSE_FLAGS.WALKING_FORWARD | POSE_FLAGS.WALKING_BACKWARD, "back jump", 0, [BUTTONS.BACK, BUTTONS.JUMP], 95, false);
+    b_jump.ButtonSequence.push([{Button: BUTTONS.FORWARD, State: BUTTON_STATE.NONE}, {Button: BUTTONS.JUMP, State: BUTTON_STATE.PRESSED}, {Button: BUTTONS.BACK, State: BUTTON_STATE.PRESSED}]);
+    b_jump.ButtonCount = 2;
+    b_jump.UseJumpSpeed = true;
+    b_jump.Vx = -${ARENA.jumpVx}; b_jump.Vy = ${ARENA.jumpVy};
+    b_jump.addRepeatingFrame(player, 0, "", f("crouch", 0), 3);
+    b_jump.addRepeatingFrame(player, 0, "", f("jump", 0), 6, {Pose: POSE_FLAGS.AIRBORNE_FB});
+    b_jump.addRepeatingFrame(player, 0, "", f("jump", 1), 8);
+    b_jump.addRepeatingFrame(player, 0, "", f("jump", 2), 8);
+    b_jump.addRepeatingFrame(player, 0, "", f("jump", 3), CONSTANTS.FRAME_MAX);
+    b_jump.chain(jump_land);
+
+    // --- STANDING PUNCHES ---
+    var p1 = player.addAnimation(POSE_FLAGS.STANDING | POSE_FLAGS.WALKING_FORWARD | POSE_FLAGS.WALKING_BACKWARD | POSE_FLAGS.ALLOW_INTERUPT_1, "light punch", 5, [BUTTONS.LIGHT_PUNCH]);
+    p1.ButtonSequence.push([{Button: BUTTONS.LIGHT_PUNCH, State: BUTTON_STATE.PRESSED, MaxNbFrames: CONSTANTS.ATTACKBUTTON_FRAMES}]);
+    p1.ButtonCount = 1;
+    p1.Flags = ({Pose: POSE_FLAGS.STANDING});
+    p1.OverrideFlags = new MoveOverrideFlags(OVERRIDE_FLAGS.STANDING, OVERRIDE_FLAGS.HPROJECTILE);
+    p1.addFrame(player, 0, "", f("p1", 0), 2, MISC_FLAGS.NONE, {Player: PLAYER_FLAGS.MOBILE});
+    p1.addFrame(player, 0, "", f("p1", 1), 3, {SwingSound: SWINGSOUND.LP, Combat: COMBAT_FLAGS.ATTACK, Pose: POSE_FLAGS.ALLOW_INTERUPT_1, HitSound: HITSOUND.LP}, MISC_FLAGS.NONE, 0, 0, 0, 10, null, 0, 0, ATTACK_FLAGS.LIGHT, [{state: HIT_FLAGS.HIGH, x: 130, y: 190}], ATTACK_FLAGS.LIGHT, 1, 1, 10);
+    p1.endBlock();
+    p1.addFrame(player, 0, "", f("p1", 2), 3);
+
+    var p2 = player.addAnimation(POSE_FLAGS.STANDING | POSE_FLAGS.WALKING_FORWARD | POSE_FLAGS.WALKING_BACKWARD | POSE_FLAGS.ALLOW_INTERUPT_1, "medium punch", 5, [BUTTONS.MEDIUM_PUNCH]);
+    p2.ButtonSequence.push([{Button: BUTTONS.MEDIUM_PUNCH, State: BUTTON_STATE.PRESSED, MaxNbFrames: CONSTANTS.ATTACKBUTTON_FRAMES}]);
+    p2.ButtonCount = 1;
+    p2.setMediumAttack();
+    p2.Flags = ({Pose: POSE_FLAGS.STANDING});
+    p2.OverrideFlags = new MoveOverrideFlags(OVERRIDE_FLAGS.STANDING, OVERRIDE_FLAGS.AIRBORNE);
+    p2.addFrame(player, 0, "", f("p2", 0), 3, MISC_FLAGS.NONE, {Player: PLAYER_FLAGS.MOBILE});
+    p2.addFrame(player, 0, "", f("p2", 1), 3, {SwingSound: SWINGSOUND.MP, Combat: COMBAT_FLAGS.ATTACK, Pose: POSE_FLAGS.ALLOW_INTERUPT_1, HitSound: HITSOUND.MP}, MISC_FLAGS.NONE, 0, 0, 0, 15, null, 0, 0, ATTACK_FLAGS.MEDIUM, [{state: HIT_FLAGS.HIGH, x: 140, y: 195}], ATTACK_FLAGS.MEDIUM, 1, 1, 15);
+    p2.endBlock();
+    p2.addFrame(player, 0, "", f("p2", 2), 4);
+
+    var p3 = player.addAnimation(POSE_FLAGS.STANDING | POSE_FLAGS.WALKING_FORWARD | POSE_FLAGS.WALKING_BACKWARD | POSE_FLAGS.ALLOW_INTERUPT_1, "hard punch", 5, [BUTTONS.HARD_PUNCH]);
+    p3.ButtonSequence.push([{Button: BUTTONS.HARD_PUNCH, State: BUTTON_STATE.PRESSED, MaxNbFrames: CONSTANTS.ATTACKBUTTON_FRAMES}]);
+    p3.ButtonCount = 1;
+    p3.setHardAttack();
+    p3.Flags = ({Pose: POSE_FLAGS.STANDING});
+    p3.OverrideFlags = new MoveOverrideFlags(OVERRIDE_FLAGS.STANDING, OVERRIDE_FLAGS.HPROJECTILE);
+    p3.addFrame(player, 0, "", f("p3", 0), 3, MISC_FLAGS.NONE, {Player: PLAYER_FLAGS.MOBILE});
+    p3.addFrame(player, 0, "", f("p3", 1), 4, {SwingSound: SWINGSOUND.HP, Combat: COMBAT_FLAGS.ATTACK, Pose: POSE_FLAGS.ALLOW_INTERUPT_1, HitSound: HITSOUND.HP}, MISC_FLAGS.NONE, 0, 0, 0, 25, null, 0, 0, ATTACK_FLAGS.HARD, [{state: HIT_FLAGS.HIGH, x: 155, y: 200}], ATTACK_FLAGS.HARD, 1, 1, 20);
+    p3.endBlock();
+    p3.addFrame(player, 0, "", f("p3", 2), 5);
+
+    // --- STANDING KICKS ---
+    var k1 = player.addAnimation(POSE_FLAGS.STANDING | POSE_FLAGS.WALKING_FORWARD | POSE_FLAGS.WALKING_BACKWARD | POSE_FLAGS.ALLOW_INTERUPT_1, "light kick", 5, [BUTTONS.LIGHT_KICK]);
+    k1.ButtonSequence.push([{Button: BUTTONS.LIGHT_KICK, State: BUTTON_STATE.PRESSED, MaxNbFrames: CONSTANTS.ATTACKBUTTON_FRAMES}]);
+    k1.ButtonCount = 1;
+    k1.Flags = ({Pose: POSE_FLAGS.STANDING});
+    k1.OverrideFlags = new MoveOverrideFlags(OVERRIDE_FLAGS.STANDING);
+    k1.addFrame(player, 0, "", f("k1", 0), 2, MISC_FLAGS.NONE, {Player: PLAYER_FLAGS.MOBILE});
+    k1.addFrame(player, 0, "", f("k1", 1), 3, {SwingSound: SWINGSOUND.LK, Combat: COMBAT_FLAGS.ATTACK, Pose: POSE_FLAGS.ALLOW_INTERUPT_1, HitSound: HITSOUND.LK}, MISC_FLAGS.NONE, 0, 0, 0, 10, null, 0, 0, ATTACK_FLAGS.LIGHT, [{state: HIT_FLAGS.LOW, x: 130, y: 130}], ATTACK_FLAGS.LIGHT, 1, 1, 10);
+    k1.endBlock();
+    k1.addFrame(player, 0, "", f("k1", 2), 3);
+
+    var k2 = player.addAnimation(POSE_FLAGS.STANDING | POSE_FLAGS.WALKING_FORWARD | POSE_FLAGS.WALKING_BACKWARD | POSE_FLAGS.ALLOW_INTERUPT_1, "medium kick", 5, [BUTTONS.MEDIUM_KICK]);
+    k2.ButtonSequence.push([{Button: BUTTONS.MEDIUM_KICK, State: BUTTON_STATE.PRESSED, MaxNbFrames: CONSTANTS.ATTACKBUTTON_FRAMES}]);
+    k2.ButtonCount = 1;
+    k2.setMediumAttack();
+    k2.Flags = ({Pose: POSE_FLAGS.STANDING});
+    k2.OverrideFlags = new MoveOverrideFlags(OVERRIDE_FLAGS.STANDING, OVERRIDE_FLAGS.AIRBORNE);
+    k2.addFrame(player, 0, "", f("k2", 0), 3, MISC_FLAGS.NONE, {Player: PLAYER_FLAGS.MOBILE});
+    k2.addFrame(player, 0, "", f("k2", 1), 4, {SwingSound: SWINGSOUND.MK, Combat: COMBAT_FLAGS.ATTACK, Pose: POSE_FLAGS.ALLOW_INTERUPT_1, HitSound: HITSOUND.MK}, MISC_FLAGS.NONE, 0, 0, 0, 15, null, 0, 0, ATTACK_FLAGS.MEDIUM, [{state: HIT_FLAGS.HIGH, x: 145, y: 155}], ATTACK_FLAGS.MEDIUM, 1, 1, 15);
+    k2.endBlock();
+    k2.addFrame(player, 0, "", f("k2", 2), 4);
+
+    var k3 = player.addAnimation(POSE_FLAGS.STANDING | POSE_FLAGS.WALKING_FORWARD | POSE_FLAGS.WALKING_BACKWARD | POSE_FLAGS.ALLOW_INTERUPT_1, "hard kick", 5, [BUTTONS.HARD_KICK]);
+    k3.ButtonSequence.push([{Button: BUTTONS.HARD_KICK, State: BUTTON_STATE.PRESSED, MaxNbFrames: CONSTANTS.ATTACKBUTTON_FRAMES}]);
+    k3.ButtonCount = 1;
+    k3.setHardAttack();
+    k3.Flags = ({Pose: POSE_FLAGS.STANDING});
+    k3.OverrideFlags = new MoveOverrideFlags(OVERRIDE_FLAGS.STANDING);
+    k3.addFrame(player, 0, "", f("k3", 0), 3, MISC_FLAGS.NONE, {Player: PLAYER_FLAGS.MOBILE});
+    k3.addFrame(player, 0, "", f("k3", 1), 4, {SwingSound: SWINGSOUND.HK, Combat: COMBAT_FLAGS.ATTACK, Pose: POSE_FLAGS.ALLOW_INTERUPT_1, HitSound: HITSOUND.HK}, MISC_FLAGS.NONE, 0, 0, 0, 25, null, 0, 0, ATTACK_FLAGS.HARD, [{state: HIT_FLAGS.HIGH, x: 160, y: 170}], ATTACK_FLAGS.HARD, 1, 1, 20);
+    k3.endBlock();
+    k3.addFrame(player, 0, "", f("k3", 2), 5);
+
+    // --- CROUCHING ATTACKS ---
+    var crouch_p1 = player.addAnimation(POSE_FLAGS.CROUCHING | POSE_FLAGS.STANDING | POSE_FLAGS.ALLOW_INTERUPT_1, "crouch p1", 5, [BUTTONS.CROUCH | BUTTONS.LIGHT_PUNCH], 110);
+    crouch_p1.ButtonSequence.push([{Button: BUTTONS.CROUCH, State: BUTTON_STATE.PRESSED}, {Button: BUTTONS.LIGHT_PUNCH, State: BUTTON_STATE.PRESSED, MaxNbFrames: CONSTANTS.ATTACKBUTTON_FRAMES}]);
+    crouch_p1.ButtonCount = 2;
+    crouch_p1.Flags = ({Pose: POSE_FLAGS.CROUCHING});
+    crouch_p1.OverrideFlags = new MoveOverrideFlags(OVERRIDE_FLAGS.CROUCHING, OVERRIDE_FLAGS.STANDING);
+    crouch_p1.addFrame(player, 0, "", f("c-p1", 0), 2, MISC_FLAGS.NONE, {Player: PLAYER_FLAGS.MOBILE});
+    crouch_p1.addFrame(player, 0, "", f("c-p1", 1), 3, {SwingSound: SWINGSOUND.LP, Combat: COMBAT_FLAGS.ATTACK, Pose: POSE_FLAGS.ALLOW_INTERUPT_1, HitSound: HITSOUND.LP}, MISC_FLAGS.NONE, 0, 0, 0, 10, null, 0, 0, ATTACK_FLAGS.LIGHT | ATTACK_FLAGS.HITS_LOW, [{state: HIT_FLAGS.LOW, x: 125, y: 100}], ATTACK_FLAGS.LIGHT, 1, 0, 10);
+    crouch_p1.endBlock();
+    crouch_p1.addFrame(player, 0, "", f("c-p1", 2), 3);
+    crouch_p1.chain(crouch, 2);
+
+    var crouch_p2 = player.addAnimation(POSE_FLAGS.CROUCHING | POSE_FLAGS.STANDING | POSE_FLAGS.ALLOW_INTERUPT_1, "crouch p2", 5, [BUTTONS.CROUCH | BUTTONS.MEDIUM_PUNCH], 110);
+    crouch_p2.ButtonSequence.push([{Button: BUTTONS.CROUCH, State: BUTTON_STATE.PRESSED}, {Button: BUTTONS.MEDIUM_PUNCH, State: BUTTON_STATE.PRESSED, MaxNbFrames: CONSTANTS.ATTACKBUTTON_FRAMES}]);
+    crouch_p2.ButtonCount = 2;
+    crouch_p2.setMediumAttack();
+    crouch_p2.Flags = ({Pose: POSE_FLAGS.CROUCHING});
+    crouch_p2.OverrideFlags = new MoveOverrideFlags(OVERRIDE_FLAGS.CROUCHING, OVERRIDE_FLAGS.STANDING);
+    crouch_p2.addFrame(player, 0, "", f("c-p2", 0), 2, MISC_FLAGS.NONE, {Player: PLAYER_FLAGS.MOBILE});
+    crouch_p2.addFrame(player, 0, "", f("c-p2", 1), 3, {SwingSound: SWINGSOUND.MP, Combat: COMBAT_FLAGS.ATTACK, Pose: POSE_FLAGS.ALLOW_INTERUPT_1, HitSound: HITSOUND.MP}, MISC_FLAGS.NONE, 0, 0, 0, 15, null, 0, 0, ATTACK_FLAGS.MEDIUM | ATTACK_FLAGS.HITS_LOW, [{state: HIT_FLAGS.LOW, x: 135, y: 105}], ATTACK_FLAGS.MEDIUM, 1, 0, 15);
+    crouch_p2.endBlock();
+    crouch_p2.addFrame(player, 0, "", f("c-p2", 2), 4);
+    crouch_p2.chain(crouch, 2);
+
+    var crouch_p3 = player.addAnimation(POSE_FLAGS.CROUCHING | POSE_FLAGS.STANDING | POSE_FLAGS.ALLOW_INTERUPT_1, "crouch p3", 5, [BUTTONS.CROUCH | BUTTONS.HARD_PUNCH], 110);
+    crouch_p3.ButtonSequence.push([{Button: BUTTONS.CROUCH, State: BUTTON_STATE.PRESSED}, {Button: BUTTONS.HARD_PUNCH, State: BUTTON_STATE.PRESSED, MaxNbFrames: CONSTANTS.ATTACKBUTTON_FRAMES}]);
+    crouch_p3.ButtonCount = 2;
+    crouch_p3.setHardAttack();
+    crouch_p3.Flags = ({Pose: POSE_FLAGS.CROUCHING});
+    crouch_p3.OverrideFlags = new MoveOverrideFlags(OVERRIDE_FLAGS.CROUCHING, OVERRIDE_FLAGS.STANDING | OVERRIDE_FLAGS.AIRBORNE);
+    crouch_p3.addFrame(player, 0, "", f("c-p3", 0), 3, MISC_FLAGS.NONE, {Player: PLAYER_FLAGS.MOBILE});
+    crouch_p3.addFrame(player, 0, "", f("c-p3", 1), 4, {SwingSound: SWINGSOUND.HP, Combat: COMBAT_FLAGS.ATTACK, Pose: POSE_FLAGS.ALLOW_INTERUPT_1, HitSound: HITSOUND.HP}, MISC_FLAGS.NONE, 0, 0, 0, 25, null, 0, 0, ATTACK_FLAGS.HARD | ATTACK_FLAGS.HITS_LOW, [{state: HIT_FLAGS.HIGH, x: 145, y: 165}], ATTACK_FLAGS.HARD, 1, 0, 20);
+    crouch_p3.endBlock();
+    crouch_p3.addFrame(player, 0, "", f("c-p3", 2), 5);
+    crouch_p3.chain(crouch, 2);
+
+    var crouch_k1 = player.addAnimation(POSE_FLAGS.CROUCHING | POSE_FLAGS.STANDING | POSE_FLAGS.ALLOW_INTERUPT_1, "crouch k1", 5, [BUTTONS.CROUCH | BUTTONS.LIGHT_KICK], 110);
+    crouch_k1.ButtonSequence.push([{Button: BUTTONS.CROUCH, State: BUTTON_STATE.PRESSED}, {Button: BUTTONS.LIGHT_KICK, State: BUTTON_STATE.PRESSED, MaxNbFrames: CONSTANTS.ATTACKBUTTON_FRAMES}]);
+    crouch_k1.ButtonCount = 2;
+    crouch_k1.Flags = ({Pose: POSE_FLAGS.CROUCHING});
+    crouch_k1.OverrideFlags = new MoveOverrideFlags(OVERRIDE_FLAGS.CROUCHING, OVERRIDE_FLAGS.STANDING);
+    crouch_k1.addFrame(player, 0, "", f("c-k1", 0), 2, MISC_FLAGS.NONE, {Player: PLAYER_FLAGS.MOBILE});
+    crouch_k1.addFrame(player, 0, "", f("c-k1", 1), 3, {SwingSound: SWINGSOUND.LK, Combat: COMBAT_FLAGS.ATTACK, Pose: POSE_FLAGS.ALLOW_INTERUPT_1, HitSound: HITSOUND.LK}, MISC_FLAGS.NONE, 0, 0, 0, 10, null, 0, 0, ATTACK_FLAGS.LIGHT | ATTACK_FLAGS.HITS_LOW, [{state: HIT_FLAGS.LOW, x: 130, y: 40}], ATTACK_FLAGS.LIGHT, 1, 0, 10);
+    crouch_k1.endBlock();
+    crouch_k1.addFrame(player, 0, "", f("c-k1", 2), 3);
+    crouch_k1.chain(crouch, 2);
+
+    var crouch_k2 = player.addAnimation(POSE_FLAGS.CROUCHING | POSE_FLAGS.STANDING | POSE_FLAGS.ALLOW_INTERUPT_1, "crouch k2", 5, [BUTTONS.CROUCH | BUTTONS.MEDIUM_KICK], 110);
+    crouch_k2.ButtonSequence.push([{Button: BUTTONS.CROUCH, State: BUTTON_STATE.PRESSED}, {Button: BUTTONS.MEDIUM_KICK, State: BUTTON_STATE.PRESSED, MaxNbFrames: CONSTANTS.ATTACKBUTTON_FRAMES}]);
+    crouch_k2.ButtonCount = 2;
+    crouch_k2.setMediumAttack();
+    crouch_k2.Flags = ({Pose: POSE_FLAGS.CROUCHING});
+    crouch_k2.OverrideFlags = new MoveOverrideFlags(OVERRIDE_FLAGS.CROUCHING, OVERRIDE_FLAGS.STANDING);
+    crouch_k2.addFrame(player, 0, "", f("c-k2", 0), 2, MISC_FLAGS.NONE, {Player: PLAYER_FLAGS.MOBILE});
+    crouch_k2.addFrame(player, 0, "", f("c-k2", 1), 4, {SwingSound: SWINGSOUND.MK, Combat: COMBAT_FLAGS.ATTACK, Pose: POSE_FLAGS.ALLOW_INTERUPT_1, HitSound: HITSOUND.MK}, MISC_FLAGS.NONE, 0, 0, 0, 15, null, 0, 0, ATTACK_FLAGS.MEDIUM | ATTACK_FLAGS.HITS_LOW, [{state: HIT_FLAGS.LOW, x: 145, y: 40}], ATTACK_FLAGS.MEDIUM, 1, 0, 15);
+    crouch_k2.endBlock();
+    crouch_k2.addFrame(player, 0, "", f("c-k2", 0), 4);
+    crouch_k2.chain(crouch, 2);
+
+    var crouch_k3 = player.addAnimation(POSE_FLAGS.CROUCHING | POSE_FLAGS.STANDING | POSE_FLAGS.ALLOW_INTERUPT_1, "crouch k3", 5, [BUTTONS.CROUCH | BUTTONS.HARD_KICK], 110);
+    crouch_k3.ButtonSequence.push([{Button: BUTTONS.CROUCH, State: BUTTON_STATE.PRESSED}, {Button: BUTTONS.HARD_KICK, State: BUTTON_STATE.PRESSED, MaxNbFrames: CONSTANTS.ATTACKBUTTON_FRAMES}]);
+    crouch_k3.ButtonCount = 2;
+    crouch_k3.setHardAttack();
+    crouch_k3.Flags = ({Pose: POSE_FLAGS.CROUCHING});
+    crouch_k3.OverrideFlags = new MoveOverrideFlags(OVERRIDE_FLAGS.CROUCHING, OVERRIDE_FLAGS.STANDING);
+    crouch_k3.addFrame(player, 0, "", f("c-k3", 0), 3, MISC_FLAGS.NONE, {Player: PLAYER_FLAGS.MOBILE});
+    crouch_k3.addFrame(player, 0, "", f("c-k3", 1), 4, {SwingSound: SWINGSOUND.HK, Combat: COMBAT_FLAGS.ATTACK, Pose: POSE_FLAGS.ALLOW_INTERUPT_1, HitSound: HITSOUND.HK}, MISC_FLAGS.NONE, 0, 0, 0, 20, null, 0, 0, ATTACK_FLAGS.HARD | ATTACK_FLAGS.HITS_LOW | ATTACK_FLAGS.TRIP, [{state: HIT_FLAGS.LOW, x: 160, y: 35}], ATTACK_FLAGS.HARD, 1, 1, 20, 0, CONSTANTS.TRIP_SLIDEFACTOR);
+    crouch_k3.endBlock();
+    crouch_k3.addFrame(player, 0, "", f("c-k3", 2), 5);
+    crouch_k3.chain(crouch, 2);
+
+    // --- AIRBORNE ATTACKS ---
+    var airKnockBackX = 1;
+    var jump_p1 = player.addAnimation(POSE_FLAGS.AIRBORNE | POSE_FLAGS.AIRBORNE_FB, "jump p1", 5, [BUTTONS.LIGHT_PUNCH], 0, true, true);
+    jump_p1.ButtonSequence.push([{Button: BUTTONS.LIGHT_PUNCH, State: BUTTON_STATE.PRESSED, MaxNbFrames: CONSTANTS.ATTACKBUTTON_FRAMES}]);
+    jump_p1.ButtonCount = 1;
+    jump_p1.OverrideFlags = new MoveOverrideFlags(OVERRIDE_FLAGS.AIRBORNE, OVERRIDE_FLAGS.NULL);
+    jump_p1.addFrame(player, 0, "", f("jump-p1", 0), 3, MISC_FLAGS.NONE, {Player: PLAYER_FLAGS.MOBILE});
+    jump_p1.addFrame(player, 0, "", f("jump-p1", 1), 12, {SwingSound: SWINGSOUND.LP, Combat: COMBAT_FLAGS.ATTACK, HitSound: HITSOUND.LP}, MISC_FLAGS.NONE, 0, 0, 0, 10, null, 0, 0, ATTACK_FLAGS.HITS_HIGH | ATTACK_FLAGS.LIGHT, [{state: HIT_FLAGS.LOW, x: 140, y: 90, Fx: airKnockBackX, Fy: 0}], ATTACK_FLAGS.LIGHT, 1, 1, 10);
+    jump_p1.endBlock();
+    jump_p1.addFrame(player, 0, "", f("jump", 1), CONSTANTS.FRAME_MAX);
+    jump_p1.chain(jump_land);
+
+    var jump_p2 = player.addAnimation(POSE_FLAGS.AIRBORNE | POSE_FLAGS.AIRBORNE_FB, "jump p2", 5, [BUTTONS.MEDIUM_PUNCH], 0, true, true);
+    jump_p2.ButtonSequence.push([{Button: BUTTONS.MEDIUM_PUNCH, State: BUTTON_STATE.PRESSED, MaxNbFrames: CONSTANTS.ATTACKBUTTON_FRAMES}]);
+    jump_p2.ButtonCount = 1; jump_p2.setMediumAttack();
+    jump_p2.OverrideFlags = new MoveOverrideFlags(OVERRIDE_FLAGS.AIRBORNE, OVERRIDE_FLAGS.NULL);
+    jump_p2.addFrame(player, 0, "", f("jump-p2", 0), 3, MISC_FLAGS.NONE, {Player: PLAYER_FLAGS.MOBILE});
+    jump_p2.addFrame(player, 0, "", f("jump-p2", 1), 12, {SwingSound: SWINGSOUND.MP, Combat: COMBAT_FLAGS.ATTACK, HitSound: HITSOUND.MP}, MISC_FLAGS.NONE, 0, 0, 0, 15, null, 0, 0, ATTACK_FLAGS.HITS_HIGH | ATTACK_FLAGS.MEDIUM, [{state: HIT_FLAGS.LOW, x: 150, y: 100, Fx: airKnockBackX, Fy: 0}], ATTACK_FLAGS.MEDIUM, 1, 1, 15);
+    jump_p2.endBlock();
+    jump_p2.addFrame(player, 0, "", f("jump", 1), CONSTANTS.FRAME_MAX);
+    jump_p2.chain(jump_land);
+
+    var jump_p3 = player.addAnimation(POSE_FLAGS.AIRBORNE | POSE_FLAGS.AIRBORNE_FB, "jump p3", 5, [BUTTONS.HARD_PUNCH], 0, true, true);
+    jump_p3.ButtonSequence.push([{Button: BUTTONS.HARD_PUNCH, State: BUTTON_STATE.PRESSED, MaxNbFrames: CONSTANTS.ATTACKBUTTON_FRAMES}]);
+    jump_p3.ButtonCount = 1; jump_p3.setHardAttack();
+    jump_p3.OverrideFlags = new MoveOverrideFlags(OVERRIDE_FLAGS.AIRBORNE, OVERRIDE_FLAGS.NULL);
+    jump_p3.addFrame(player, 0, "", f("jump-p3", 0), 3, MISC_FLAGS.NONE, {Player: PLAYER_FLAGS.MOBILE});
+    jump_p3.addFrame(player, 0, "", f("jump-p3", 1), 14, {SwingSound: SWINGSOUND.HP, Combat: COMBAT_FLAGS.ATTACK, HitSound: HITSOUND.HP}, MISC_FLAGS.NONE, 0, 0, 0, 20, null, 0, 0, ATTACK_FLAGS.HITS_HIGH | ATTACK_FLAGS.HARD, [{state: HIT_FLAGS.LOW, x: 170, y: 80, Fx: airKnockBackX, Fy: 0}], ATTACK_FLAGS.HARD, 1, 1, 20);
+    jump_p3.endBlock();
+    jump_p3.addFrame(player, 0, "", f("jump", 1), CONSTANTS.FRAME_MAX);
+    jump_p3.chain(jump_land);
+
+    var jump_k1 = player.addAnimation(POSE_FLAGS.AIRBORNE | POSE_FLAGS.AIRBORNE_FB, "jump k1", 5, [BUTTONS.LIGHT_KICK], 0, true, true);
+    jump_k1.ButtonSequence.push([{Button: BUTTONS.LIGHT_KICK, State: BUTTON_STATE.PRESSED, MaxNbFrames: CONSTANTS.ATTACKBUTTON_FRAMES}]);
+    jump_k1.ButtonCount = 1;
+    jump_k1.OverrideFlags = new MoveOverrideFlags(OVERRIDE_FLAGS.AIRBORNE, OVERRIDE_FLAGS.NULL);
+    jump_k1.addFrame(player, 0, "", f("jump-k1", 0), 3, MISC_FLAGS.NONE, {Player: PLAYER_FLAGS.MOBILE});
+    jump_k1.addFrame(player, 0, "", f("jump-k1", 1), 12, {SwingSound: SWINGSOUND.LK, Combat: COMBAT_FLAGS.ATTACK, HitSound: HITSOUND.LK}, MISC_FLAGS.NONE, 0, 0, 0, 10, null, 0, 0, ATTACK_FLAGS.HITS_HIGH | ATTACK_FLAGS.LIGHT, [{state: HIT_FLAGS.LOW, x: 140, y: 50, Fx: airKnockBackX, Fy: 0}], ATTACK_FLAGS.LIGHT, 1, 1, 10);
+    jump_k1.endBlock();
+    jump_k1.addFrame(player, 0, "", f("jump", 1), CONSTANTS.FRAME_MAX);
+    jump_k1.chain(jump_land);
+
+    var jump_k2 = player.addAnimation(POSE_FLAGS.AIRBORNE | POSE_FLAGS.AIRBORNE_FB, "jump k2", 5, [BUTTONS.MEDIUM_KICK], 0, true, true);
+    jump_k2.ButtonSequence.push([{Button: BUTTONS.MEDIUM_KICK, State: BUTTON_STATE.PRESSED, MaxNbFrames: CONSTANTS.ATTACKBUTTON_FRAMES}]);
+    jump_k2.ButtonCount = 1; jump_k2.setMediumAttack();
+    jump_k2.OverrideFlags = new MoveOverrideFlags(OVERRIDE_FLAGS.AIRBORNE, OVERRIDE_FLAGS.NULL);
+    jump_k2.addFrame(player, 0, "", f("jump-k2", 0), 3, MISC_FLAGS.NONE, {Player: PLAYER_FLAGS.MOBILE});
+    jump_k2.addFrame(player, 0, "", f("jump-k2", 1), 12, {SwingSound: SWINGSOUND.MK, Combat: COMBAT_FLAGS.ATTACK, HitSound: HITSOUND.MK}, MISC_FLAGS.NONE, 0, 0, 0, 15, null, 0, 0, ATTACK_FLAGS.HITS_HIGH | ATTACK_FLAGS.MEDIUM, [{state: HIT_FLAGS.LOW, x: 150, y: 50, Fx: airKnockBackX, Fy: 0}], ATTACK_FLAGS.MEDIUM, 1, 1, 15);
+    jump_k2.endBlock();
+    jump_k2.addFrame(player, 0, "", f("jump", 1), CONSTANTS.FRAME_MAX);
+    jump_k2.chain(jump_land);
+
+    var jump_k3 = player.addAnimation(POSE_FLAGS.AIRBORNE | POSE_FLAGS.AIRBORNE_FB, "jump k3", 5, [BUTTONS.HARD_KICK], 0, true, true);
+    jump_k3.ButtonSequence.push([{Button: BUTTONS.HARD_KICK, State: BUTTON_STATE.PRESSED, MaxNbFrames: CONSTANTS.ATTACKBUTTON_FRAMES}]);
+    jump_k3.ButtonCount = 1; jump_k3.setHardAttack();
+    jump_k3.OverrideFlags = new MoveOverrideFlags(OVERRIDE_FLAGS.AIRBORNE, OVERRIDE_FLAGS.NULL);
+    jump_k3.addFrame(player, 0, "", f("jump-k3", 0), 3, MISC_FLAGS.NONE, {Player: PLAYER_FLAGS.MOBILE});
+    jump_k3.addFrame(player, 0, "", f("jump-k3", 1), 14, {SwingSound: SWINGSOUND.HK, Combat: COMBAT_FLAGS.ATTACK, HitSound: HITSOUND.HK}, MISC_FLAGS.NONE, 0, 0, 0, 20, null, 0, 0, ATTACK_FLAGS.HITS_HIGH | ATTACK_FLAGS.HARD, [{state: HIT_FLAGS.LOW, x: 160, y: 60, Fx: airKnockBackX, Fy: 0}], ATTACK_FLAGS.HARD, 1, 1, 20);
+    jump_k3.endBlock();
+    jump_k3.addFrame(player, 0, "", f("jump", 1), CONSTANTS.FRAME_MAX);
+    jump_k3.chain(jump_land);
+
+    // --- THROWS ---
+    var throw1 = player.addThrow(POSE_FLAGS.STANDING | POSE_FLAGS.WALKING_FORWARD | POSE_FLAGS.WALKING_BACKWARD, "throw 1", 0, [BUTTONS.FORWARD | BUTTONS.CHARGE, BUTTONS.FORWARD | BUTTONS.HARD_PUNCH], CONSTANTS.MAX_PRIORITY, false, false, 0, "ShoulderThrow");
+    throw1.ButtonSequence.push([{Button: [BUTTONS.FORWARD, BUTTONS.BACK], State: BUTTON_STATE.PRESSED}, {Button: [BUTTONS.MEDIUM_PUNCH, BUTTONS.HARD_PUNCH], State: BUTTON_STATE.PRESSED, MaxNbFrames: CONSTANTS.ATTACKBUTTON_FRAMES}]);
+    throw1.ButtonCount = 3;
+    throw1.NbChargeFrames = 5;
+    throw1.OverrideFlags = new MoveOverrideFlags(OVERRIDE_FLAGS.NONE, OVERRIDE_FLAGS.ALL);
+    throw1.setGrappleDistance(CONSTANTS.GRAPPLE_DISTANCE);
+    throw1.setOtherPlayerAirborneFlags(AIRBORNE_FLAGS.NO);
+    throw1.addFrame(player, 0, "", f("stance", 0), 8, MISC_FLAGS.NONE, {Player: PLAYER_FLAGS.MOBILE}, 0, 0, 0, 0, null, 0, 0, ATTACK_FLAGS.THROW_START, [{state: HIT_FLAGS.LOW, x: 130, y: 145}, {state: HIT_FLAGS.HIGH, x: 170, y: 185}], ATTACK_FLAGS.NONE, 1);
+    throw1.addFrame(player, 0, "", f("p3", 0), 8);
+    throw1.addFrameWithSound(player, 1, "audio/misc/hit-hp-3.zzz", 0, "", f("p3", 1), 6);
+    throw1.addFrame(player, 0, "", f("p3", 2), 20, {Combat: COMBAT_FLAGS.ATTACK}, MISC_FLAGS.NONE, -10, 0, 0, 100, null, 0, 0, ATTACK_FLAGS.THROW_EJECT, [{x: -1, y: -1, Fx: 1.5, Fy: 0.75}], ATTACK_FLAGS.NONE, 2, 1, 15);
+
+    // --- UPGRADED EYE LASER BEAM SPECIAL MOVE ---
+    for (var x = 0; x < 3; ++x) {
+        var xSpeed = 40 + (x * 10);
+        var pLaser = player.addProjectile("laser p" + (x + 1), -40, 230, xSpeed);
+        
+        var origRender = pLaser.render;
+        pLaser.render = function(frame, stageDiffX, stageDiffY) {
+            origRender.call(this, frame, stageDiffX, stageDiffY);
+            var el = this.SpriteElement || this.Element;
+            if (el) {
+                if (this.Direction > 0) {
+                    el.style.transform = "scaleX(1)";
+                } else {
+                    el.style.transform = "scaleX(-1)";
+                }
+            }
+        };
+
+        pLaser.OverrideFlags = new MoveOverrideFlags(OVERRIDE_FLAGS.ALL, OVERRIDE_FLAGS.PROJECTILE);
+        pLaser.HitSound = HITSOUND.FIRE0;
+        pLaser.Fx = 1.4;
+        pLaser.Fy = 0.5;
+        pLaser.EnergyToAdd = 4;
+        pLaser.MaxHits = 3 + x; 
+        pLaser.CanJuggle = true;
+        pLaser.DefaultLocalHitStop = 3;
+        
+        pLaser.AttackState = ATTACK_FLAGS.SPECIAL | ATTACK_FLAGS.HARD | ATTACK_FLAGS.FLOOR_AIRBORNE_HARD;
+        pLaser.HitState = HIT_FLAGS.HIGH;
+        pLaser.FlagsToSend = ATTACK_FLAGS.SPECIAL | ATTACK_FLAGS.HARD | ATTACK_FLAGS.REAR;
+        pLaser.Params = {
+            EnemyHitStop: 4,
+            Combo: COMBO_FLAGS.RED_FIRE_ON_MAX_HIT | COMBO_FLAGS.KNOCKDOWN_ON_MAX_HIT
+        };
+
+        pLaser.ClipFront = 0;
+        pLaser.ClipBack = 0;
+        pLaser.ClipTop = 5;
+        pLaser.ClipBottom = 5;
+        pLaser.BaseDamage = 14 - x;
+
+        pLaser.Animation.vxFn = function(args) { return function(s, t) { return s; }; };
+        pLaser.Animation.vyFn = function(args) { return function(s, t) { return 0; }; };
+
+        for (var fIdx = 0; fIdx < 4; fIdx++) {
+            pLaser.Animation.addFrame(player, 0, "", folder + "/laser-0.png", 2, 0, 0, 0);
+            pLaser.Animation.addFrame(player, 0, "", folder + "/laser-1.png", 2, 0, 0, 0);
+        }
+
+        pLaser.DisintegrationAnimation.addFrame(player, 0, "", folder + "/laser-0.png", 2, 0, 0, 0);
+        pLaser.DisintegrationAnimation.addFrame(player, 0, "", folder + "/laser-1.png", 2, 0, 0, 0);
+    }
+      
+    for (var x = 0; x < 3; ++x) {
+        var button = BUTTONS.LIGHT_PUNCH;
+        if (x === 1) button = BUTTONS.MEDIUM_PUNCH;
+        else if (x === 2) button = BUTTONS.HARD_PUNCH;
+
+        var projId = x;
+
+        var laserMove = player.addAnimation(
+            POSE_FLAGS.STANDING | POSE_FLAGS.WALKING_FORWARD | POSE_FLAGS.WALKING_BACKWARD | POSE_FLAGS.ALLOW_INTERUPT_1,
+            "laser p" + (x + 1),
+            10,
+            [BUTTONS.FORWARD, button],
+            50, 
+            true
+        );
+
+        laserMove.IsProjectile = true;
+        laserMove.ProjectileId = projId;
+        laserMove.ButtonCount = 2;
+
+        laserMove.ButtonSequence.push([
+            { Button: BUTTONS.FORWARD, State: BUTTON_STATE.PRESSED },
+            { Button: button, State: BUTTON_STATE.PRESSED, MaxNbFrames: CONSTANTS.ATTACKBUTTON_FRAMES }
+        ]);
+
+        laserMove.OverrideFlags = new MoveOverrideFlags();
+        laserMove.IsSpecialMove = true;
+        laserMove.EnergyToAdd = 5;
+        laserMove.Flags = ({Combat: COMBAT_FLAGS.PROJECTILE_ACTIVE});
+
+        laserMove.addFrame(player, 0, "", f("special-1", 0), 4, {Combat: COMBAT_FLAGS.PENDING_ATTACK}, {Player: PLAYER_FLAGS.MOBILE});
+        laserMove.addFrame(player, 0, "", f("special-1", 1), 2, {Combat: COMBAT_FLAGS.PENDING_ATTACK});
+
+        laserMove.addFrameWithSound(
+            player, 1, "audio/misc/projectile-0.zzz", 0, "",
+            f("special-1", 1), 16,
+            {
+                Combat: COMBAT_FLAGS.PENDING_ATTACK | COMBAT_FLAGS.SPAWN_PROJECTILE | COMBAT_FLAGS.PROJECTILE_ACTIVE | COMBAT_FLAGS.STOP_SLIDE_BACK
+            },
+            0, 0, 0, 0, 0, projId
+        );
+
+        laserMove.endBlock();
+        laserMove.addFrame(player, 0, "", f("special-1", 2), 6 + (x * 2), MISC_FLAGS.NONE, {Combat: COMBAT_FLAGS.CAN_BE_BLOCKED});
+    }
+
+    // --- FULL ENGINE HIT REACTIONS & DAMAGE STATES ---
+    var hitReact_sLL = player.addAnimation(POSE_FLAGS.STANDING, "hr_sLL", 0, ["hr_sLL"], 0, false);
+    hitReact_sLL.Flags = ({Player: PLAYER_FLAGS.HOLD_ZINDEX});
+    hitReact_sLL.addFrame(player, 0, "", f("hit-sln", 0), 3, MISC_FLAGS.NONE, {Player: PLAYER_FLAGS.MOBILE});
+    hitReact_sLL.addFrame(player, 0, "", f("hit-sln", 1), 5);
+    hitReact_sLL.addFrame(player, 0, "", f("hit-sln", 0), 3);
+    hitReact_sLL.chain(stance, 0);
+
+    var hitReact_sLH = player.addAnimation(POSE_FLAGS.STANDING, "hr_sLH", 0, ["hr_sLH"], 0, false);
+    hitReact_sLH.Flags = ({Player: PLAYER_FLAGS.HOLD_ZINDEX});
+    hitReact_sLH.addFrame(player, 0, "", f("hit-sln", 0), 3, MISC_FLAGS.NONE, {Player: PLAYER_FLAGS.MOBILE});
+    hitReact_sLH.addFrame(player, 0, "", f("hit-sln", 1), 5);
+    hitReact_sLH.addFrame(player, 0, "", f("hit-sln", 0), 3);
+    hitReact_sLH.chain(stance, 0);
+
+    var hitReact_sML = player.addAnimation(POSE_FLAGS.STANDING, "hr_sML", 0, ["hr_sML"], 0, false);
+    hitReact_sML.Flags = ({Player: PLAYER_FLAGS.HOLD_ZINDEX});
+    hitReact_sML.addFrame(player, 0, "", f("hit-sln", 0), 4, MISC_FLAGS.NONE, {Player: PLAYER_FLAGS.MOBILE}).clipMove({Front: 20});
+    hitReact_sML.addFrame(player, 0, "", f("hit-sln", 1), 6).clipMove({Front: 20});
+    hitReact_sML.addFrame(player, 0, "", f("hit-sln", 0), 4).clipMove({Front: 20});
+    hitReact_sML.chain(stance, 0);
+
+    var hitReact_sMH = player.addAnimation(POSE_FLAGS.STANDING, "hr_sMH", 0, ["hr_sMH"], 0, false);
+    hitReact_sMH.Flags = ({Player: PLAYER_FLAGS.HOLD_ZINDEX});
+    hitReact_sMH.addFrame(player, 0, "", f("hit-sln", 0), 4, MISC_FLAGS.NONE, {Player: PLAYER_FLAGS.MOBILE});
+    hitReact_sMH.addFrame(player, 0, "", f("hit-sln", 1), 6);
+    hitReact_sMH.addFrame(player, 0, "", f("hit-sln", 0), 4);
+    hitReact_sMH.chain(stance, 0);
+
+    var hitReact_sHL = player.addAnimation(POSE_FLAGS.STANDING, "hr_sHL", 0, ["hr_sHL"], 0, false);
+    hitReact_sHL.Flags = ({Player: PLAYER_FLAGS.HOLD_ZINDEX});
+    hitReact_sHL.addFrame(player, 0, "", f("hit-sln", 0), 2, MISC_FLAGS.NONE, {Player: PLAYER_FLAGS.MOBILE}).clipMove({Front: 20});
+    hitReact_sHL.addFrameWithSound(player, 1, "audio/misc/hit-hp.zzz", 0, "", f("hit-sln", 1), 8).clipMove({Front: 20});
+    hitReact_sHL.addFrame(player, 0, "", f("hit-sln", 0), 4).clipMove({Front: 20});
+    hitReact_sHL.chain(stance, 0);
+
+    var hitReact_sHH = player.addAnimation(POSE_FLAGS.STANDING, "hr_sHH", 0, ["hr_sHH"], 0, false);
+    hitReact_sHH.Flags = ({Player: PLAYER_FLAGS.HOLD_ZINDEX});
+    hitReact_sHH.addFrameWithSound(player, 1, "audio/misc/hit-hp.zzz", 0, "", f("hit-sln", 0), 4, MISC_FLAGS.NONE, {Player: PLAYER_FLAGS.MOBILE});
+    hitReact_sHH.addFrame(player, 0, "", f("hit-sln", 1), 8);
+    hitReact_sHH.addFrame(player, 0, "", f("hit-sln", 0), 4);
+    hitReact_sHH.chain(stance, 0);
+
+    var hitReact_cLH = player.addAnimation(POSE_FLAGS.CROUCHING, "hr crouch light", 0, ["hr_cLH"], 0, false);
+    hitReact_cLH.Flags = ({Player: PLAYER_FLAGS.HOLD_ZINDEX, Pose: POSE_FLAGS.CROUCHING});
+    hitReact_cLH.addFrame(player, 0, "", f("crouch", 1), 8, MISC_FLAGS.NONE, {Player: PLAYER_FLAGS.MOBILE});
+    hitReact_cLH.chain(crouch, 2);
+
+    var hitReact_cMH = player.addAnimation(POSE_FLAGS.CROUCHING, "hr crouch medium", 0, ["hr_cMH"], 0, false);
+    hitReact_cMH.Flags = ({Player: PLAYER_FLAGS.HOLD_ZINDEX, Pose: POSE_FLAGS.CROUCHING});
+    hitReact_cMH.addFrame(player, 0, "", f("crouch", 1), 4, MISC_FLAGS.NONE, {Player: PLAYER_FLAGS.MOBILE});
+    hitReact_cMH.addFrame(player, 0, "", f("crouch", 2), 6);
+    hitReact_cMH.addFrame(player, 0, "", f("crouch", 1), 4);
+    hitReact_cMH.chain(crouch, 2);
+
+    var hitReact_cHH = player.addAnimation(POSE_FLAGS.CROUCHING, "hr crouch hard", 0, ["hr_cHH"], 0, false);
+    hitReact_cHH.Flags = ({Player: PLAYER_FLAGS.HOLD_ZINDEX, Pose: POSE_FLAGS.CROUCHING});
+    hitReact_cHH.addFrame(player, 0, "", f("crouch", 2), 6, MISC_FLAGS.NONE, {Player: PLAYER_FLAGS.MOBILE});
+    hitReact_cHH.addFrame(player, 0, "", f("crouch", 1), 6);
+    hitReact_cHH.addFrame(player, 0, "", f("crouch", 0), 4);
+    hitReact_cHH.chain(crouch, 2);
+
+    var down = player.addAnimation(MISC_FLAGS.NONE, "down", 0, ["hr_down"], 0, false);
+    down.Flags = ({Player: PLAYER_FLAGS.HOLD_ZINDEX});
+    down.addFrameWithSound(player, 1, "audio/misc/floored-1.zzz", 0, "200", f("down", 0), 4, {Player: PLAYER_FLAGS.SUPER_INVULNERABLE | PLAYER_FLAGS.SPAWN_SMALLDIRT}, {Player: PLAYER_FLAGS.MOBILE});
+
+    var getup = player.addAnimation(MISC_FLAGS.NONE, "getup", 0, ["hr_getup"], 0, false);
+    getup.Flags = ({Player: PLAYER_FLAGS.HOLD_ZINDEX});
+    getup.addFrame(player, 0, "200", f("down", 0), 4, {Player: PLAYER_FLAGS.IGNORE_ATTACKS});
+    getup.addFrame(player, 0, "", f("getup", 0), 4, {Player: PLAYER_FLAGS.IGNORE_ATTACKS});
+    getup.addFrame(player, 0, "", f("getup", 1), 4, {Player: PLAYER_FLAGS.IGNORE_ATTACKS});
+    getup.addFrame(player, 0, "", f("getup", 2), 4, {Player: PLAYER_FLAGS.IGNORE_ATTACKS});
+    getup.addFrame(player, 0, "", f("crouch", 0), 4, {Player: PLAYER_FLAGS.IGNORE_ATTACKS});
+    getup.chain(stance, 0);
+
+    var bounce = player.addAnimation(MISC_FLAGS.NONE, "bounce", 0, ["hr_bounce"], 0, false);
+    bounce.Flags = ({Player: PLAYER_FLAGS.HOLD_ZINDEX | PLAYER_FLAGS.USE_CURRENT_VX});
+    bounce.chainVxFn = function(v) { return v * 0.75; };
+    bounce.Vy = 80;
+    bounce.addFrameWithSound(player, 1, "audio/misc/floored-2.zzz", 0, "200", f("hit-trip", 1), 4, {Player: PLAYER_FLAGS.IGNORE_ATTACKS, Spawn: SPAWN_FLAGS.SPAWN_BIGDIRT}, {Player: PLAYER_FLAGS.MOBILE}, 0, 1);
+    bounce.addFrame(player, 0, "200", f("down", 0), CONSTANTS.FRAME_MAX, {Pose: POSE_FLAGS.AIRBORNE, Player: PLAYER_FLAGS.USE_ATTACK_DIRECTION | PLAYER_FLAGS.IGNORE_ATTACKS}, {Player: PLAYER_FLAGS.MOBILE});
+    bounce.chain(getup);
+
+    var tripped = player.addAnimation(POSE_FLAGS.STANDING | POSE_FLAGS.CROUCHING, "tripped", 0, ["hr_trip"], 0, false);
+    tripped.Flags = ({Player: PLAYER_FLAGS.HOLD_ZINDEX, Juggle: JUGGLE_FLAGS.ALLOW});
+    tripped.Vx = 25; tripped.Vy = 130;
+    tripped.addFrame(player, 0, "", f("hit-trip", 0), 4, {Player: PLAYER_FLAGS.INVULNERABLE}, {Player: PLAYER_FLAGS.MOBILE});
+    tripped.addFrame(player, 0, "", f("hit-trip", 1), 6, {Player: PLAYER_FLAGS.INVULNERABLE});
+    tripped.addFrame(player, 0, "", f("hit-trip", 2), CONSTANTS.FRAME_MAX, {Player: PLAYER_FLAGS.INVULNERABLE});
+    tripped.chain(bounce);
+
+    var knock_down = player.addAnimation(POSE_FLAGS.STANDING, "knock down", 0, ["hr_knockdown"], 0, false);
+    knock_down.Flags = ({Player: PLAYER_FLAGS.HOLD_ZINDEX, Juggle: JUGGLE_FLAGS.ALLOW});
+    knock_down.Vx = 25; knock_down.Vy = 150;
+    knock_down.addFrame(player, 0, "", f("hit-trip", 0), 6, {Player: PLAYER_FLAGS.INVULNERABLE}, {Player: PLAYER_FLAGS.MOBILE}, 0, 1);
+    knock_down.addFrame(player, 0, "", f("hit-trip", 1), 6, {Player: PLAYER_FLAGS.INVULNERABLE});
+    knock_down.addFrame(player, 0, "", f("hit-trip", 2), CONSTANTS.FRAME_MAX, {Player: PLAYER_FLAGS.SUPER_INVULNERABLE});
+    knock_down.chain(bounce);
+
+    var hitReact_air = player.addAnimation(POSE_FLAGS.AIRBORNE, "hit in air", 0, ["hr_air"], 0, false);
+    hitReact_air.Flags = ({Player: PLAYER_FLAGS.HOLD_ZINDEX, Juggle: JUGGLE_FLAGS.ALLOW});
+    hitReact_air.Vx = -40; hitReact_air.Vy = 130;
+    hitReact_air.addFrame(player, 0, "", f("hit-trip", 0), 8, {Player: PLAYER_FLAGS.INVULNERABLE}, {Player: PLAYER_FLAGS.MOBILE});
+    hitReact_air.addFrame(player, 0, "", f("hit-trip", 1), 6, {Player: PLAYER_FLAGS.INVULNERABLE});
+    hitReact_air.addFrame(player, 0, "", f("jump", 1), CONSTANTS.FRAME_MAX, {Player: PLAYER_FLAGS.SUPER_INVULNERABLE});
+    hitReact_air.chain(jump_land);
+
+    var eject = player.addAnimation(POSE_FLAGS.STANDING, "eject", 0, ["eject"], 0, false);
+    eject.Flags = ({Player: PLAYER_FLAGS.HOLD_ZINDEX, Juggle: JUGGLE_FLAGS.ALLOW});
+    eject.Vx = 35; eject.Vy = 200;
+    eject.addFrame(player, 0, "", f("hit-trip", 0), 32, {Player: PLAYER_FLAGS.INVULNERABLE}, {Player: PLAYER_FLAGS.MOBILE}, 0, 1);
+    eject.addFrame(player, 0, "", f("hit-trip", 1), CONSTANTS.FRAME_MAX, {Player: PLAYER_FLAGS.SUPER_INVULNERABLE, Juggle: JUGGLE_FLAGS.IGNORE});
+    eject.chain(bounce);
+
+    var hitReact_red_fire = player.addAnimation(POSE_FLAGS.STANDING, "red fire", 0, ["hr_red_fire"], 0, false);
+    hitReact_red_fire.Flags = ({Player: PLAYER_FLAGS.HOLD_ZINDEX, Combat: COMBAT_FLAGS.IGNORE_CLEAR_FIRE, Juggle: JUGGLE_FLAGS.ALLOW});
+    hitReact_red_fire.Vx = 25; hitReact_red_fire.Vy = 200;
+    hitReact_red_fire.addFrame(player, 0, "200", f("hit-trip", 0), 4, {Player: PLAYER_FLAGS.INVULNERABLE}, {Player: PLAYER_FLAGS.MOBILE}, 1);
+    hitReact_red_fire.addFrame(player, 0, "200", f("hit-trip", 1), CONSTANTS.FRAME_MAX, {Player: PLAYER_FLAGS.SUPER_INVULNERABLE});
+    hitReact_red_fire.chain(bounce);
+
+    var hitReact_blue_fire = player.addAnimation(POSE_FLAGS.STANDING, "blue fire", 0, ["hr_blue_fire"], 0, false);
+    hitReact_blue_fire.Flags = ({Player: PLAYER_FLAGS.HOLD_ZINDEX, Combat: COMBAT_FLAGS.IGNORE_CLEAR_FIRE, Juggle: JUGGLE_FLAGS.ALLOW});
+    hitReact_blue_fire.Vx = 50; hitReact_blue_fire.Vy = 150;
+    hitReact_blue_fire.addFrame(player, 0, "200", f("hit-trip", 0), 4, {Player: PLAYER_FLAGS.INVULNERABLE}, {Player: PLAYER_FLAGS.MOBILE}, 1);
+    hitReact_blue_fire.addFrame(player, 0, "200", f("hit-trip", 1), CONSTANTS.FRAME_MAX, {Player: PLAYER_FLAGS.SUPER_INVULNERABLE});
+    hitReact_blue_fire.chain(bounce);
+
+    var dizzy = player.addAnimation(MISC_FLAGS.NONE, "so dizzy", 0, ["hr_sodizzy"], 0, false);
+    dizzy.Flags = ({Player: PLAYER_FLAGS.HOLD_ZINDEX, Alert: ALERT_FLAGS.DIZZY});
+    dizzy.AdjustShadowPosition = false;
+    dizzy.addFrame(player, 0, "", f("hit-sln", 0), 32, {Player: PLAYER_FLAGS.DIZZY}, {Player: PLAYER_FLAGS.MOBILE});
+    dizzy.addFrame(player, 0, "", f("hit-sln", 1), 32, {Player: PLAYER_FLAGS.DIZZY});
+    dizzy.chain(dizzy);
+
+    var getup_dizzy = player.addAnimation(MISC_FLAGS.NONE, "getup dizzy", 0, ["hr_getupdizzy"], 0, false);
+    getup_dizzy.Flags = ({Player: PLAYER_FLAGS.HOLD_ZINDEX});
+    getup_dizzy.addFrameWithSound(player, 1, "audio/misc/floored-1.zzz", 0, "200", f("down", 0), 4, {Player: PLAYER_FLAGS.IGNORE_ATTACKS, Spawn: SPAWN_FLAGS.SPAWN_SMALLDIRT}, {Player: PLAYER_FLAGS.MOBILE});
+    getup_dizzy.addFrame(player, 0, "", f("getup", 0), 4, {Player: PLAYER_FLAGS.IGNORE_ATTACKS});
+    getup_dizzy.addFrame(player, 0, "", f("getup", 1), 4, {Player: PLAYER_FLAGS.IGNORE_ATTACKS});
+    getup_dizzy.addFrame(player, 0, "", f("getup", 2), 4, {Player: PLAYER_FLAGS.IGNORE_ATTACKS});
+    getup_dizzy.addFrame(player, 0, "", f("crouch", 0), 4, {Player: PLAYER_FLAGS.IGNORE_ATTACKS});
+    getup_dizzy.chain(dizzy);
+
+    var hitReact_dizzyBounce = player.addAnimation(MISC_FLAGS.NONE, "dizzy bounce", 0, ["hr_dizzybounce"], 0, false);
+    hitReact_dizzyBounce.Flags = ({Player: PLAYER_FLAGS.HOLD_ZINDEX | PLAYER_FLAGS.USE_CURRENT_VX});
+    hitReact_dizzyBounce.chainVxFn = function(v) { return v * 0.75; };
+    hitReact_dizzyBounce.Vy = 80;
+    hitReact_dizzyBounce.addFrameWithSound(player, 1, "audio/misc/floored-2.zzz", 0, "200", f("hit-trip", 1), 4, {Player: PLAYER_FLAGS.IGNORE_ATTACKS, Spawn: SPAWN_FLAGS.SPAWN_BIGDIRT}, {Player: PLAYER_FLAGS.MOBILE}, 0, 1);
+    hitReact_dizzyBounce.addFrame(player, 0, "200", f("down", 0), CONSTANTS.FRAME_MAX, {Pose: POSE_FLAGS.AIRBORNE, Player: PLAYER_FLAGS.USE_ATTACK_DIRECTION | PLAYER_FLAGS.IGNORE_ATTACKS});
+    hitReact_dizzyBounce.chain(getup_dizzy);
+
+    var hitReact_dizzy = player.addAnimation(POSE_FLAGS.STANDING, "dizzy", 0, ["hr_dizzy"], 0, false);
+    hitReact_dizzy.Flags = ({Player: PLAYER_FLAGS.MOVE_TO_FRONT});
+    hitReact_dizzy.Vx = 35; hitReact_dizzy.Vy = 200;
+    hitReact_dizzy.addFrame(player, 0, "200", f("hit-trip", 0), 32, {Player: PLAYER_FLAGS.IGNORE_ATTACKS}, {Player: PLAYER_FLAGS.MOBILE}, 1);
+    hitReact_dizzy.addFrame(player, 0, "200", f("hit-trip", 1), CONSTANTS.FRAME_MAX, {Player: PLAYER_FLAGS.SUPER_INVULNERABLE | PLAYER_FLAGS.IGNORE_ATTACKS});
+    hitReact_dizzy.chain(hitReact_dizzyBounce);
+
+    var hitReact_deadBounce = player.addAnimation(MISC_FLAGS.NONE, "dead bounce", 0, ["hr_deadbounce"], 0, false);
+    hitReact_deadBounce.Flags = ({Player: PLAYER_FLAGS.HOLD_ZINDEX | PLAYER_FLAGS.USE_CURRENT_VX});
+    hitReact_deadBounce.chainVxFn = function(v) { return v * 0.75; };
+    hitReact_deadBounce.Vy = 80;
+    hitReact_deadBounce.addFrameWithSound(player, 1, "audio/misc/floored-2.zzz", 0, "200", f("hit-trip", 1), 4, {Player: PLAYER_FLAGS.INVULNERABLE | PLAYER_FLAGS.IGNORE_COLLISIONS, Spawn: SPAWN_FLAGS.SPAWN_BIGDIRT}, {Player: PLAYER_FLAGS.MOBILE}, 0, 1);
+    hitReact_deadBounce.addFrame(player, 0, "200", f("down", 0), CONSTANTS.FRAME_MAX, {Pose: POSE_FLAGS.AIRBORNE, Player: PLAYER_FLAGS.USE_ATTACK_DIRECTION | PLAYER_FLAGS.IGNORE_ATTACKS | PLAYER_FLAGS.IGNORE_COLLISIONS});
+    hitReact_deadBounce.chain(down);
+
+    var dead = player.addAnimation(POSE_FLAGS.STANDING, "hr dead", 0, ["hr_dead"], 0, false);
+    dead.Flags = ({Player: PLAYER_FLAGS.MOVE_TO_FRONT, Juggle: JUGGLE_FLAGS.ALLOW});
+    dead.Vx = 35; dead.Vy = 200;
+    dead.addFrame(player, 0, "200", f("hit-trip", 0), 32, {Player: PLAYER_FLAGS.INVULNERABLE | PLAYER_FLAGS.IGNORE_COLLISIONS}, 0, 1);
+    dead.addFrame(player, 0, "200", f("down", 0), CONSTANTS.FRAME_MAX, {Player: PLAYER_FLAGS.SUPER_INVULNERABLE | PLAYER_FLAGS.IGNORE_COLLISIONS});
+    dead.chain(hitReact_deadBounce);
+
+    var win = player.addAnimation(MISC_FLAGS.NONE, "win 1", 0, ["win1"], 0, false);
+    win.Flags = ({Player: PLAYER_FLAGS.HOLD_ZINDEX});
+    win.addFrame(player, 0, "", f("win", 0), 6);
+    win.addFrame(player, 0, "", f("win", 1), 8);
+    win.addFrame(player, 0, "", f("win", 2), CONSTANTS.FRAME_MAX);
+    player.WinAnimationNames = ["win 1"];
+
+    // FIX: CSS to scale down the laser visually without cropping it
+    if (!document.getElementById("homelander-laser-scale-fix")) {
+        var style = document.createElement('style');
+        style.id = "homelander-laser-scale-fix";
+        style.innerHTML = "div[style*='projectiles.png'] { background-size: 475px 25px !important; }";
+        document.head.appendChild(style);
+    }
+
+    player.sortAnimations();
+    return player;
+};
+
+window.create${cap} = create${cap};
+window.create${char.toLowerCase()} = create${cap};
+`;
+}
+
+function downloadExportFile() {
+  const char = document.getElementById("charName").value.trim().toLowerCase() || "homelander";
+  const filename = (activeExportTab === 1) ? `player-${char}-spritedata.js` : `player-${char}.js`;
+  const text = document.getElementById("txtExportCode").value;
+  const blob = new Blob([text], { type: "text/javascript" });
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = filename;
+  a.click();
+}
+
+function copyExportCode() {
+  const codeBox = document.getElementById("txtExportCode");
+  codeBox.select();
+  document.execCommand("copy");
+  alert("Code copied to clipboard!");
+}
+</script>
+</body>
+</html>
