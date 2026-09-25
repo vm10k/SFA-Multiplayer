@@ -30,6 +30,12 @@ This project aims to recreate the high-intensity gameplay of classic fighting ti
 * **Dramatic Battle (2v2)**: Cooperate with a partner or face off in larger skirmishes.
 * **Team Survival (3v3)**: An endurance-based mode where teams of three compete for dominance.
 
+## Features
+* ** 6 Characters
+<img width="1280" height="279" alt="image" src="https://github.com/user-attachments/assets/c7b7e856-8049-4621-95c9-fd0869e7f52c" />
+
+* ** 9 Arenas
+<img width="1142" height="673" alt="image" src="https://github.com/user-attachments/assets/9fc34264-6291-43c1-9821-5b41facae497" />
 
 ## Social and Competitive Systems
 * **Global Chat**: A real-time messaging system to communicate with the entire player base, organize matches, or discuss strategy.
@@ -90,7 +96,8 @@ Visit: https://vm10k.github.io/SFA-Multiplayer/
 ### 4. Test it correctly
 <img width="1263" height="872" alt="image" src="https://github.com/user-attachments/assets/5ec80560-2321-4da7-9baa-450fda8f10ad" />
 
-### 5. Adding special moves it requires more job to do so. so you have to use ai that designs a projectitles for example a laser and tell ai to add it up to your character files the data and sprite data and keep on refine it to get it right.
+### 5. Adding special moves
+it requires more job to do so. so you have to use ai that designs a projectitles for example a laser and tell ai to add it up to your character files the data and sprite data and keep on refine it to get it right.
 Thats all!
 
 
