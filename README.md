@@ -74,5 +74,25 @@ Create a file named `player-[character_name].js` to define your character's stat
 
 Once these three items are ready, submit a Pull Request. and we will handle the system integration and add your character to the select screen!
 ---
+# How to Make a Character?
+
+Visit: https://vm10k.github.io/SFA-Multiplayer/
+
+### 1. upload your spritesheet "png"
+<img width="1280" height="889" alt="image" src="https://github.com/user-attachments/assets/83ca7813-3b1a-4678-93a0-6dfab11a0e16" />
+
+### 2. Start mapping your character moves.
+<img width="1280" height="360" alt="image" src="https://github.com/user-attachments/assets/9ac40639-3fd1-4b85-a4f4-1b1d21fb464b" />
+
+### 3. Test it, set the damage for your character moves, and its size.
+<img width="1024" height="722" alt="image" src="https://github.com/user-attachments/assets/4d26a520-619b-4585-9dbc-01164a2ef986" />
+
+### 4. Test it correctly
+<img width="1263" height="872" alt="image" src="https://github.com/user-attachments/assets/5ec80560-2321-4da7-9baa-450fda8f10ad" />
+
+### 5. Adding special moves it requires more job to do so. so you have to use ai that designs a projectitles for example a laser and tell ai to add it up to your character files the data and sprite data and keep on refine it to get it right.
+Thats all!
+
+
 
 Copyright 2026 Fan Project. Server Alpha v1.0. All trademarks belong to their respective owners.
