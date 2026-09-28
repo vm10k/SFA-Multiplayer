@@ -1,0 +1,1801 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Fighter Studio & Real-Time Arena (Ultimate Engine Edition)</title>
+<style>
+  :root {
+    --bg-dark: #08090d;
+    --bg-panel: #11131b;
+    --bg-card: #181b26;
+    --bg-active: #232738;
+    --accent: #ff4757;
+    --accent-hover: #ff6b81;
+    --text-main: #f1f2f6;
+    --text-muted: #8890a4;
+    --border: #24293a;
+    --highlight: #2ed573;
+    --gold: #ffa502;
+    --blue: #1e90ff;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', monospace, sans-serif; user-select: none; }
+  body { background: var(--bg-dark); color: var(--text-main); height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
+
+  header {
+    background: var(--bg-panel);
+    border-bottom: 1px solid var(--border);
+    padding: 6px 14px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    z-index: 30;
+    gap: 10px;
+  }
+  .title-group { display: flex; align-items: center; gap: 8px; font-weight: bold; flex-wrap: wrap; }
+  .title-group span.badge {
+    background: #2ed57322; color: var(--highlight); border: 1px solid var(--highlight);
+    padding: 2px 6px; border-radius: 4px; font-size: 0.68rem; letter-spacing: 1px;
+  }
+  .view-tabs { display: flex; gap: 4px; background: #0b0c13; padding: 3px; border-radius: 6px; }
+  .view-tab {
+    background: transparent; border: none; color: var(--text-muted); padding: 5px 12px;
+    border-radius: 4px; cursor: pointer; font-size: 0.75rem; font-weight: bold; transition: 0.15s;
+  }
+  .view-tab.active { background: var(--accent); color: #fff; }
+  .char-input {
+    background: var(--bg-card); border: 1px solid var(--border); color: #fff;
+    padding: 4px 8px; border-radius: 4px; font-size: 0.78rem; width: 105px;
+  }
+  .btn {
+    background: var(--accent); color: #fff; border: none; padding: 5px 10px;
+    border-radius: 4px; cursor: pointer; font-size: 0.75rem; font-weight: bold;
+    display: inline-flex; align-items: center; gap: 4px; transition: 0.15s;
+  }
+  .btn:hover { background: var(--accent-hover); }
+  .btn-sec { background: var(--bg-card); border: 1px solid var(--border); color: #fff; }
+  .btn-sec:hover { background: #282e44; }
+  .btn-green { background: var(--highlight); color: #000; }
+  .btn-green:hover { background: #7bed9f; }
+  .btn-gold { background: var(--gold); color: #000; }
+  .btn-gold:hover { background: #eccc68; }
+
+  .workspace { display: flex; flex: 1; overflow: hidden; position: relative; }
+  .view-container { display: flex; flex: 1; width: 100%; height: 100%; position: absolute; left: 0; top: 0; }
+  .hidden { display: none !important; }
+
+  /* Moves Sidebar */
+  .moves-sidebar {
+    width: 260px; background: var(--bg-panel); border-right: 1px solid var(--border);
+    display: flex; flex-direction: column; overflow-y: auto; padding: 6px; gap: 5px;
+  }
+  .move-row {
+    background: var(--bg-card); border: 1px solid var(--border); border-radius: 4px;
+    padding: 6px; cursor: pointer; display: flex; flex-direction: column; gap: 4px;
+  }
+  .move-row.active { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent); }
+  .move-header { display: flex; justify-content: space-between; font-size: 0.74rem; font-weight: bold; }
+  .frame-strip { display: flex; gap: 3px; overflow-x: auto; padding-bottom: 2px; }
+  .frame-pill {
+    width: 26px; height: 26px; background: #0c0e14; border: 1px dashed var(--border);
+    border-radius: 3px; display: flex; align-items: center; justify-content: center;
+    font-size: 0.65rem; color: var(--text-muted); cursor: pointer; flex-shrink: 0;
+  }
+  .frame-pill.assigned { border-style: solid; border-color: var(--highlight); color: var(--highlight); background: #2ed57318; }
+  .frame-pill.active { border-color: var(--accent); border-width: 2px; color: #fff; font-weight: bold; }
+
+  /* Slicer Viewport */
+  .canvas-viewport { flex: 1; background: #06070a; position: relative; overflow: hidden; cursor: crosshair; }
+  canvas#sheetCanvas { position: absolute; left: 0; top: 0; }
+  .viewport-hud {
+    position: absolute; bottom: 10px; left: 10px; background: rgba(18, 20, 29, 0.94);
+    border: 1px solid var(--border); border-radius: 6px; padding: 6px 12px;
+    display: flex; gap: 8px; align-items: center; font-size: 0.72rem; z-index: 10;
+  }
+
+  /* Tools Sidebar */
+  .tools-sidebar {
+    width: 315px; background: var(--bg-panel); border-left: 1px solid var(--border);
+    padding: 10px; display: flex; flex-direction: column; gap: 8px; overflow-y: auto; font-size: 0.75rem;
+  }
+  .tool-card {
+    background: var(--bg-card); border: 1px solid var(--border); border-radius: 6px;
+    padding: 8px; display: flex; flex-direction: column; gap: 6px;
+  }
+  .tool-card header {
+    background: transparent; border-bottom: 1px solid var(--border); padding: 0 0 4px 0;
+    font-size: 0.75rem; color: var(--gold); font-weight: bold; display: flex; justify-content: space-between;
+  }
+
+  /* Arena Viewport */
+  .stage-viewport {
+    flex: 1; background: #000; position: relative; display: flex;
+    justify-content: center; align-items: center; overflow: hidden;
+  }
+  canvas#stageCanvas {
+    background: linear-gradient(to bottom, #11141e 0%, #1f2334 72%, #454f5c 72%, #1a2026 100%);
+    box-shadow: 0 0 30px rgba(0,0,0,0.9);
+    image-rendering: pixelated;
+  }
+  .hud-health {
+    position: absolute; top: 16px; left: 24px; right: 24px; display: flex;
+    justify-content: space-between; pointer-events: none; z-index: 20;
+  }
+  .bar-container { width: 43%; display: flex; flex-direction: column; gap: 3px; }
+  .bar-label { display: flex; justify-content: space-between; font-size: 0.75rem; font-weight: bold; }
+  .health-frame {
+    height: 18px; background: rgba(0,0,0,0.7); border: 2px solid #fff;
+    box-shadow: 0 0 8px rgba(0,0,0,0.8); overflow: hidden;
+  }
+  .health-fill {
+    width: 100%; height: 100%; background: linear-gradient(to bottom, #ffd32a, #ff9f1a);
+    transition: width 0.08s linear;
+  }
+
+  .key {
+    background: #000; border: 1px solid #444; border-radius: 3px;
+    padding: 1px 4px; color: var(--highlight); font-weight: bold; font-size: 0.68rem;
+  }
+
+  /* Modal */
+  .modal-backdrop {
+    display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(0,0,0,0.88); z-index: 100; align-items: center; justify-content: center;
+  }
+  .modal {
+    background: var(--bg-panel); border: 1px solid var(--border); border-radius: 8px;
+    width: 86%; max-width: 980px; height: 86vh; display: flex; flex-direction: column; padding: 14px;
+  }
+  .modal-tabs { display: flex; gap: 6px; margin-bottom: 8px; }
+  .tab-btn {
+    background: var(--bg-card); color: var(--text-muted); border: 1px solid var(--border);
+    padding: 5px 12px; border-radius: 4px; cursor: pointer; font-size: 0.75rem;
+  }
+  .tab-btn.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+  textarea.code-export {
+    flex: 1; background: #07080d; color: #a4b0be; border: 1px solid var(--border);
+    border-radius: 6px; padding: 10px; font-family: monospace; font-size: 0.74rem;
+    white-space: pre; overflow: auto;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="title-group">
+    <span>FIGHTER STUDIO</span>
+    <span class="badge">SMART DUAL-CHROMA</span>
+    <input type="text" id="charName" class="char-input" value="ken" title="Character ID">
+    
+    <input type="file" id="fileInput" accept="image/*" style="display:none;">
+    <button class="btn btn-sec" onclick="document.getElementById('fileInput').click()">📁 Load Spritesheet</button>
+    
+    <input type="file" id="jsFilesInput" accept=".js" multiple style="display:none;">
+    <button class="btn btn-sec" style="border-color:var(--highlight); color:var(--highlight);" onclick="document.getElementById('jsFilesInput').click()">📂 Load player-*.js</button>
+    
+    <button class="btn btn-gold" onclick="runSmartAutoDetect()">🔍 Smart Auto-Detect</button>
+    <button class="btn btn-gold" onclick="smartAutoFillAll()">⚡ Smart Auto-Map</button>
+  </div>
+
+  <div class="view-tabs">
+    <button class="view-tab active" id="tabStudioBtn" onclick="switchView('studio')">Slicer & Stabilizer</button>
+    <button class="view-tab" id="tabArenaBtn" onclick="switchView('arena')">Arena Combat Test</button>
+  </div>
+
+  <div>
+    <button class="btn btn-green" onclick="openExportModal()">Generate & Export JS</button>
+  </div>
+</header>
+
+<div class="workspace">
+  <!-- VIEW 1: SPRITE SLICER & STABILIZER VIEW -->
+  <div class="view-container" id="viewStudio">
+    <!-- Left Moves List -->
+    <div class="moves-sidebar" id="movesList"></div>
+
+    <!-- Center Sheet Canvas -->
+    <div class="canvas-viewport" id="sheetViewport">
+      <canvas id="sheetCanvas"></canvas>
+      <div class="viewport-hud">
+        <span>Zoom: <strong id="lblZoom" style="color:var(--highlight)">100%</strong></span>
+        <button class="btn btn-sec" onclick="changeZoom(1.2)">+</button>
+        <button class="btn btn-sec" onclick="changeZoom(1/1.2)">-</button>
+        <button class="btn btn-sec" onclick="resetZoom()">Reset</button>
+        <span>Frames Detected: <strong id="lblBoxCount" style="color:var(--gold)">0</strong></span>
+        <span style="color:var(--text-muted)">| Drag with Right-Click or Space+Left-Click to Pan.</span>
+      </div>
+    </div>
+
+    <!-- Right Tools & Stabilization -->
+    <div class="tools-sidebar">
+      <!-- Chroma Key Config -->
+      <div class="tool-card">
+        <header>
+          <span>Background & Chroma Removal</span>
+          <span id="lblChromaInfo" style="color:var(--highlight);">Magenta + Black</span>
+        </header>
+        <div style="display:flex; align-items:center; justify-content:space-between; gap:6px;">
+          <span>Custom Chroma:</span>
+          <input type="color" id="colChroma" value="#ff00ff" onchange="userSetChroma(this.value)" style="background:transparent; border:none; width:34px; height:24px; cursor:pointer;">
+          <button class="btn btn-sec" id="btnEyedropper" onclick="toggleEyedropper()">🎯 Eyedropper</button>
+        </div>
+        <div style="display:flex; justify-content:space-between; margin-top:2px;">
+          <span>Color Sensitivity: <strong id="lblTol">40</strong></span>
+          <input type="range" id="rngTolerance" min="10" max="100" value="40" oninput="chromaTolerance=parseInt(this.value); document.getElementById('lblTol').innerText=this.value;">
+        </div>
+        <label><input type="checkbox" id="chkAutoMultiChroma" checked> Auto-Strip Magenta (#FF00FF) & Black Margins</label>
+        <label><input type="checkbox" id="chkRemoveChroma" checked onchange="refreshSheetChromaClean()"> Transparent Background in Preview & Arena</label>
+      </div>
+
+      <!-- Mini Frame Preview -->
+      <div class="tool-card">
+        <header>Move Animation Preview</header>
+        <div style="height:140px; background:#07080b; border:1px solid var(--border); border-radius:4px; display:flex; justify-content:center; align-items:center; overflow:hidden;">
+          <canvas id="miniPreviewCanvas" width="180" height="140"></canvas>
+        </div>
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-top:2px;">
+          <button class="btn btn-sec" style="flex:1;" onclick="togglePlayPreview()" id="btnPlayPause">Pause</button>
+          <span style="font-size:0.7rem; color:var(--text-muted); margin-left:8px;">Speed: <strong id="lblFps">8fps</strong></span>
+          <input type="range" id="rngFps" min="2" max="24" value="8" style="width:70px; margin-left:6px;" oninput="previewFps = parseInt(this.value); document.getElementById('lblFps').innerText = this.value + 'fps';">
+        </div>
+      </div>
+
+      <!-- Foot Baseline & Offsets -->
+      <div class="tool-card">
+        <header>Foot Baseline & Ground Alignment</header>
+        <div style="display:flex; justify-content:space-between;">
+          <span>Y-Offset (ImageOffsetY):</span>
+          <strong id="lblCurOffsetY" style="color:var(--highlight)">0px</strong>
+        </div>
+        <input type="range" id="rngFrameOffsetY" min="-60" max="90" value="0" step="1" oninput="adjustActiveFrameOffset('y', parseInt(this.value))">
+        
+        <div style="display:flex; justify-content:space-between; margin-top:4px;">
+          <span>X-Offset (ImageOffsetX):</span>
+          <strong id="lblCurOffsetX" style="color:var(--highlight)">0px</strong>
+        </div>
+        <input type="range" id="rngFrameOffsetX" min="-80" max="80" value="0" step="1" oninput="adjustActiveFrameOffset('x', parseInt(this.value))">
+        
+        <div style="display:flex; gap:4px; margin-top:4px;">
+          <button class="btn btn-sec" style="flex:1;" onclick="autoStabilizeCurrentMove()">Auto-Align Baseline</button>
+          <button class="btn btn-sec" style="flex:1;" onclick="resetFrameOffsets()">Reset</button>
+        </div>
+      </div>
+
+      <!-- Box Slicer Tools -->
+      <div class="tool-card">
+        <header>Manual Box Operations</header>
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:4px;">
+          <button class="btn btn-sec" onclick="splitSelectedBox(2)">✂️ Split in 2</button>
+          <button class="btn btn-sec" onclick="splitSelectedBox(3)">✂️ Split in 3</button>
+        </div>
+        <button class="btn btn-sec" style="color:var(--accent);" onclick="deleteSelectedBox()">🗑️ Delete Selected Box</button>
+        <button class="btn btn-sec" onclick="assignRowToActiveMove()">⚡ Assign Row to Current Move</button>
+      </div>
+
+      <!-- Hitbox Setup -->
+      <div class="tool-card">
+        <header>Attack & Hitbox Flags</header>
+        <label><input type="checkbox" id="chkFrameIsHit" onchange="toggleActiveFrameHit(this.checked)"> Active Strike Hit Frame</label>
+        <div style="display:flex; justify-content:space-between;">
+          <span>Damage:</span>
+          <input type="number" id="numDamage" value="15" style="width:60px; background:#000; border:1px solid #444; color:#fff; padding:2px 4px; font-size:0.75rem;" onchange="setActiveFrameProp('damage', parseInt(this.value))">
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- VIEW 2: INTERACTIVE COMBAT ARENA -->
+  <div class="view-container hidden" id="viewArena">
+    <div class="stage-viewport">
+      <div class="hud-health">
+        <div class="bar-container">
+          <div class="bar-label">
+            <span style="color:var(--blue);" id="lblP1Name">PLAYER 1</span>
+            <span id="lblP1HpVal">100%</span>
+          </div>
+          <div class="health-frame"><div class="health-fill" id="hpBarP1"></div></div>
+        </div>
+
+        <div style="color:var(--gold); font-weight:bold; font-size:1.4rem; text-shadow:0 0 6px #000; padding-top:4px;">VS</div>
+
+        <div class="bar-container">
+          <div class="bar-label">
+            <span style="color:var(--gold);">DUMMY (247px)</span>
+            <span id="lblDummyHpVal">100%</span>
+          </div>
+          <div class="health-frame"><div class="health-fill" id="hpBarDummy"></div></div>
+        </div>
+      </div>
+
+      <canvas id="stageCanvas" width="768" height="448"></canvas>
+    </div>
+
+    <!-- Arena Settings -->
+    <div class="tools-sidebar" style="width:280px;">
+      <div class="tool-card">
+        <header>Engine Keys</header>
+        <div><span class="key">&larr;</span> / <span class="key">&rarr;</span>: Walk Forward / Back</div>
+        <div><span class="key">&uarr;</span>: Jump (SF2 Physics)</div>
+        <div><span class="key">&darr;</span>: Crouch Stance</div>
+        <div style="margin-top:4px; color:var(--highlight); font-weight:bold;">Ground Attacks:</div>
+        <div><span class="key">A</span>, <span class="key">S</span>, <span class="key">D</span>: LP, MP, HP</div>
+        <div><span class="key">Z</span>, <span class="key">X</span>, <span class="key">C</span>: LK, MK, HK</div>
+        <div style="margin-top:4px; color:var(--gold); font-weight:bold;">Special Moves:</div>
+        <div><span class="key">Q</span>: Hadoken Fireball</div>
+        <div><span class="key">W</span>: Shoryuken Dragon Punch</div>
+        <div><span class="key">E</span>: Tatsumaki Hurricane Kick</div>
+      </div>
+
+      <div class="tool-card">
+        <header>Fighter Height Scaling</header>
+        <div style="display:flex; justify-content:space-between;">
+          <span>Multiplier: <strong id="lblArenaScale" style="color:var(--highlight)">1.0x</strong></span>
+          <span>Target Height: <strong id="lblArenaHeight" style="color:var(--gold)">247px</strong></span>
+        </div>
+        <input type="range" id="rngArenaScale" min="0.8" max="2.6" step="0.05" value="1.0" oninput="setGlobalScale(this.value)">
+        <div style="display:flex; gap:4px; margin-top:2px;">
+          <button class="btn btn-sec" style="flex:1;" onclick="setGlobalScale(1.0)">1.0x (Capcom 1:1)</button>
+          <button class="btn btn-sec" style="flex:1;" onclick="setGlobalScale(1.85)">1.85x (Sagat Scale)</button>
+        </div>
+      </div>
+
+      <div class="tool-card">
+        <header>Display Options</header>
+        <label><input type="checkbox" id="chkInvertFlip"> Invert Sprite Flip Direction</label>
+        <label><input type="checkbox" id="chkHitboxes" checked> Show Hurt/Hitboxes</label>
+        <label><input type="checkbox" id="chkFloorLine" checked> Floor Reference & Shadows</label>
+      </div>
+
+      <div class="tool-card">
+        <header>Match Reset</header>
+        <button class="btn btn-sec" onclick="resetArenaMatch()">Reset Dummy & Fighter</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal For JS Code Export -->
+<div class="modal-backdrop" id="exportModal">
+  <div class="modal">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 10px;">
+      <h2 style="font-size:1.1rem; color:var(--gold);">100% Engine Aligned JS Exporter</h2>
+      <button class="btn btn-sec" onclick="closeExportModal()">Close</button>
+    </div>
+    <div class="modal-tabs">
+      <button class="tab-btn active" id="tabCode1" onclick="showExportTab(1)">player-[char]-spritedata.js</button>
+      <button class="tab-btn" id="tabCode2" onclick="showExportTab(2)">player-[char].js</button>
+      <button class="btn btn-green" style="margin-left:auto;" onclick="downloadExportFile()">Download File</button>
+      <button class="btn btn-sec" onclick="copyExportCode()">Copy Code</button>
+    </div>
+    <textarea class="code-export" id="txtExportCode" readonly></textarea>
+  </div>
+</div>
+
+<script>
+/* =========================================================================
+   1. GLOBAL ENGINE STATE & COMPLETE MOVE DEFINITIONS
+   ========================================================================= */
+const GROUND_Y = 380;
+const CONSTANTS = {
+  HALF_G: 4.903325,
+  Y_DAMPING: 0.1,
+  X_DAMPING: 0.1,
+  DEFAULT_JUMP_SPEED: 1.2
+};
+
+const ARENA = {
+  jumpVy: 200,
+  jumpVx: 32
+};
+
+const MOVES = [
+  // Core Stances & Movement
+  { id: "stance",       name: "Stance (Idle)",            frames: 6, speed: 5, loop: true },
+  { id: "crouch",       name: "Crouch",                   frames: 3, speed: 3, loop: false },
+  { id: "turn",         name: "Standing Turn",            frames: 3, speed: 3, loop: false },
+  { id: "f-walk",       name: "Forward Walk",             frames: 6, speed: 4, loop: true },
+  { id: "b-walk",       name: "Back Walk",                frames: 6, speed: 4, loop: true },
+  { id: "jump",         name: "Neutral Jump",             frames: 7, speed: 5, loop: false },
+
+  // Standing Attacks
+  { id: "p1",           name: "Light Punch (LP)",         frames: 3, speed: 3, loop: false },
+  { id: "p2",           name: "Medium Punch (MP)",        frames: 4, speed: 3, loop: false },
+  { id: "p3",           name: "Hard Punch (HP)",          frames: 4, speed: 4, loop: false },
+  { id: "k1",           name: "Light Kick (LK)",          frames: 4, speed: 3, loop: false },
+  { id: "k2",           name: "Medium Kick (MK)",         frames: 5, speed: 3, loop: false },
+  { id: "k3",           name: "Hard Kick (HK)",           frames: 5, speed: 4, loop: false },
+
+  // Crouching Attacks
+  { id: "c-p1",         name: "Crouch Light Punch",       frames: 3, speed: 2, loop: false },
+  { id: "c-p2",         name: "Crouch Medium Punch",      frames: 3, speed: 3, loop: false },
+  { id: "c-p3",         name: "Crouch Hard Punch",        frames: 4, speed: 3, loop: false },
+  { id: "c-k1",         name: "Crouch Light Kick",        frames: 3, speed: 2, loop: false },
+  { id: "c-k2",         name: "Crouch Medium Kick",       frames: 4, speed: 3, loop: false },
+  { id: "c-k3",         name: "Crouch Hard Kick (Sweep)", frames: 5, speed: 4, loop: false },
+
+  // Aerial Attacks
+  { id: "jump_p1",      name: "Jump Light Punch",         frames: 3, speed: 4, loop: false },
+  { id: "jump_p2",      name: "Jump Medium Punch",        frames: 3, speed: 4, loop: false },
+  { id: "jump_p3",      name: "Jump Hard Punch",          frames: 3, speed: 4, loop: false },
+  { id: "jump_k1",      name: "Jump Light Kick",          frames: 3, speed: 4, loop: false },
+  { id: "jump_k2",      name: "Jump Medium Kick",         frames: 4, speed: 4, loop: false },
+  { id: "jump_k3",      name: "Jump Hard Kick",           frames: 4, speed: 4, loop: false },
+
+  // Special Moves
+  { id: "fireball",     name: "Hadoken (Fireball)",       frames: 4, speed: 4, loop: false },
+  { id: "uppercut",     name: "Shoryuken (Dragon Punch)", frames: 6, speed: 3, loop: false },
+  { id: "spinkick",     name: "Tatsumaki (Spinkick)",     frames: 7, speed: 3, loop: false },
+
+  // Hit Reactions & Floor
+  { id: "hit-sln",      name: "Hit Standing Light",       frames: 3, speed: 4, loop: false },
+  { id: "hit-smn",      name: "Hit Standing Medium",      frames: 3, speed: 5, loop: false },
+  { id: "hit-shn",      name: "Hit Standing Heavy",       frames: 3, speed: 5, loop: false },
+  { id: "hit-air",      name: "Air Juggle / Knockdown",   frames: 4, speed: 4, loop: false },
+  { id: "down",         name: "Down / Floored",           frames: 1, speed: 12, loop: false },
+  { id: "getup",        name: "Getup",                    frames: 4, speed: 4, loop: false },
+  { id: "dizzy",        name: "Dizzy Stance",             frames: 3, speed: 6, loop: true },
+  { id: "win",          name: "Victory Pose",             frames: 4, speed: 6, loop: false }
+];
+
+let sheetCanvas, sctx, sheetViewport;
+let miniCanvas, mctx;
+let stageCanvas, actx;
+
+let rawSheetImg = new Image();
+let cleanSheetCanvas = document.createElement("canvas");
+let cleanSheetCtx = cleanSheetCanvas.getContext("2d");
+let sheetReady = false;
+
+let customChroma = { r: 255, g: 0, b: 255 }; // Default magenta
+let chromaTolerance = 40;
+let eyedropperActive = false;
+
+let assignedSprites = {};
+let detectedBoxes = [];
+let detectedRows = [];
+let selectedBox = null;
+
+let currentMove = "stance";
+let currentSlot = 0;
+let globalScale = 1.0;
+
+let zoom = 1.0;
+let panX = 30, panY = 30;
+let isPanning = false;
+let startPanX = 0, startPanY = 0;
+let spaceKey = false;
+
+let isPreviewPlaying = true;
+let previewFps = 8;
+let previewFrame = 0;
+let previewTimer = 0;
+
+let P1 = {
+  x: 200, y: 0, vx: 0,
+  jumpT: 0, jumpVx: 0, jumpVy: 200, jumpSpeed: 1.2,
+  direction: -1, state: "stance",
+  frameIdx: 0, timer: 0,
+  isAirborne: false, hp: 100, hitCooldown: 0, stunTicks: 0
+};
+
+let Dummy = {
+  x: 520, y: 0, w: 120, h: 247,
+  hp: 100, direction: 1, hitFlash: 0, stunTimer: 0
+};
+
+let keys = {};
+
+/* =========================================================================
+   2. INITIALIZATION & FILE LOADING
+   ========================================================================= */
+function init() {
+  sheetCanvas = document.getElementById("sheetCanvas");
+  sctx = sheetCanvas.getContext("2d");
+  sheetViewport = document.getElementById("sheetViewport");
+  
+  miniCanvas = document.getElementById("miniPreviewCanvas");
+  mctx = miniCanvas.getContext("2d");
+  
+  stageCanvas = document.getElementById("stageCanvas");
+  actx = stageCanvas.getContext("2d");
+
+  // PNG Spritesheet listener
+  document.getElementById("fileInput").addEventListener("change", function(e) {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    const fname = file.name.toLowerCase();
+    for (let c of ["ken", "ryu", "chunli", "guy", "rose", "birdie", "cody", "vega", "sagat", "akuma"]) {
+      if (fname.includes(c)) {
+        document.getElementById("charName").value = c;
+        break;
+      }
+    }
+
+    const reader = new FileReader();
+    reader.onload = ev => {
+      rawSheetImg.onload = () => {
+        sheetReady = true;
+        refreshSheetChromaClean();
+        resetZoom();
+        runSmartAutoDetect();
+      };
+      rawSheetImg.src = ev.target.result;
+    };
+    reader.readAsDataURL(file);
+  });
+
+  setupJSFilesImporter();
+  buildMovesSidebar();
+  setupSheetEvents();
+  setupArenaInputs();
+  setGlobalScale(1.0);
+
+  window.addEventListener("resize", resizeSheetCanvas);
+  resizeSheetCanvas();
+
+  requestAnimationFrame(masterLoop);
+}
+
+window.onload = init;
+
+/* =========================================================================
+   3. HIGH-ACCURACY DUAL-CHROMA DETECTION & BOUNDING LOGIC
+   ========================================================================= */
+function toggleEyedropper() {
+  eyedropperActive = !eyedropperActive;
+  const btn = document.getElementById("btnEyedropper");
+  btn.style.background = eyedropperActive ? "var(--highlight)" : "";
+  btn.style.color = eyedropperActive ? "#000" : "";
+  sheetCanvas.style.cursor = eyedropperActive ? "cell" : "crosshair";
+}
+
+function userSetChroma(hex) {
+  const num = parseInt(hex.replace("#",""), 16);
+  customChroma = { r: (num >> 16) & 255, g: (num >> 8) & 255, b: num & 255 };
+  refreshSheetChromaClean();
+  drawSheetCanvas();
+}
+
+function refreshSheetChromaClean() {
+  if (!sheetReady) return;
+  cleanSheetCanvas.width = rawSheetImg.width;
+  cleanSheetCanvas.height = rawSheetImg.height;
+  cleanSheetCtx.drawImage(rawSheetImg, 0, 0);
+
+  if (!document.getElementById("chkRemoveChroma").checked) return;
+
+  const imgData = cleanSheetCtx.getImageData(0, 0, cleanSheetCanvas.width, cleanSheetCanvas.height);
+  const d = imgData.data;
+
+  for (let i = 0; i < d.length; i += 4) {
+    if (isBackgroundPixel(d[i], d[i+1], d[i+2], d[i+3])) {
+      d[i+3] = 0; // Make pure background transparent
+    }
+  }
+  cleanSheetCtx.putImageData(imgData, 0, 0);
+}
+
+// Discriminator: Distinguishes background (Magenta cells + Black grid) from the actual fighter
+function isBackgroundPixel(r, g, b, a) {
+  // 1. Transparent Alpha
+  if (a < 30) return true;
+
+  const autoMulti = document.getElementById("chkAutoMultiChroma").checked;
+
+  if (autoMulti) {
+    // 2. Magenta / Fuchsia (Typical arcade cell background: R and B are high, G is very low)
+    if (r > 175 && g < 75 && b > 175) return true;
+
+    // 3. Black canvas margin between cells (R, G, B all close to 0)
+    if (r < 22 && g < 22 && b < 22) return true;
+
+    // 4. Cyan or Lime Green chroma rips
+    if (r < 40 && g > 200 && b > 200) return true; // Cyan
+    if (r < 40 && g > 200 && b < 40) return true;  // Lime Green
+  }
+
+  // 5. User-selected Chroma Color
+  if (customChroma) {
+    const dr = r - customChroma.r;
+    const dg = g - customChroma.g;
+    const db = b - customChroma.b;
+    if ((dr*dr + dg*dg + db*db) < (chromaTolerance * chromaTolerance * 3)) {
+      return true;
+    }
+  }
+
+  return false;
+}
+
+// Extracts tight character bounding boxes across the sheet
+function runSmartAutoDetect() {
+  if (!sheetReady) {
+    alert("Please upload a spritesheet image first!");
+    return;
+  }
+
+  const w = rawSheetImg.width;
+  const h = rawSheetImg.height;
+
+  const off = document.createElement("canvas");
+  off.width = w; off.height = h;
+  const octx = off.getContext("2d");
+  octx.drawImage(rawSheetImg, 0, 0);
+
+  const imgData = octx.getImageData(0, 0, w, h).data;
+
+  // Build binary character mask (1 = Fighter pixel, 0 = Background)
+  const mask = new Uint8Array(w * h);
+  for (let idx = 0; idx < w * h; idx++) {
+    const p = idx * 4;
+    if (!isBackgroundPixel(imgData[p], imgData[p+1], imgData[p+2], imgData[p+3])) {
+      mask[idx] = 1;
+    }
+  }
+
+  // Connected Component Labeling
+  const visited = new Uint8Array(w * h);
+  let rawBoxes = [];
+
+  for (let y = 0; y < h; y += 2) {
+    for (let x = 0; x < w; x += 2) {
+      const idx = y * w + x;
+      if (visited[idx] || mask[idx] === 0) continue;
+
+      let minX = x, maxX = x, minY = y, maxY = y;
+      const q = [x, y];
+      visited[idx] = 1;
+      let pixelCount = 0;
+
+      let head = 0;
+      while (head < q.length) {
+        const cx = q[head++];
+        const cy = q[head++];
+        pixelCount++;
+
+        if (cx < minX) minX = cx;
+        if (cx > maxX) maxX = cx;
+        if (cy < minY) minY = cy;
+        if (cy > maxY) maxY = cy;
+
+        // 8-way neighbors (1-pixel connectivity to avoid jumping across cells)
+        const nbrs = [
+          [cx + 1, cy], [cx - 1, cy], [cx, cy + 1], [cx, cy - 1],
+          [cx + 1, cy + 1], [cx - 1, cy - 1], [cx + 1, cy - 1], [cx - 1, cy + 1]
+        ];
+
+        for (let i = 0; i < nbrs.length; i++) {
+          const nx = nbrs[i][0], ny = nbrs[i][1];
+          if (nx >= 0 && nx < w && ny >= 0 && ny < h) {
+            const nidx = ny * w + nx;
+            if (!visited[nidx] && mask[nidx] === 1) {
+              visited[nidx] = 1;
+              q.push(nx, ny);
+            }
+          }
+        }
+      }
+
+      const bw = (maxX - minX) + 1;
+      const bh = (maxY - minY) + 1;
+
+      // Discard small noise specks (< 25 pixels or tiny dimensions)
+      if (bw >= 16 && bh >= 22 && pixelCount >= 40) {
+        rawBoxes.push({
+          x: Math.max(0, minX - 1),
+          y: Math.max(0, minY - 1),
+          w: Math.min(w - minX, bw + 2),
+          h: Math.min(h - minY, bh + 2),
+          offX: 0, offY: 0, hit: false, damage: 15
+        });
+      }
+    }
+  }
+
+  // Merge disconnected limbs or accessories on the same sprite frame (distance <= 4px)
+  rawBoxes = mergeNearbyLimbBoxes(rawBoxes);
+
+  detectedBoxes = rawBoxes;
+  clusterIntoRows();
+  document.getElementById("lblBoxCount").innerText = detectedBoxes.length;
+
+  refreshSheetChromaClean();
+  drawSheetCanvas();
+  renderMiniPreview();
+}
+
+function mergeNearbyLimbBoxes(boxes) {
+  let merged = [];
+  let used = new Uint8Array(boxes.length);
+
+  for (let i = 0; i < boxes.length; i++) {
+    if (used[i]) continue;
+    let b1 = { ...boxes[i] };
+    for (let j = i + 1; j < boxes.length; j++) {
+      if (used[j]) continue;
+      let b2 = boxes[j];
+
+      // If two boxes overlap or touch within 4px of each other
+      const gapX = Math.max(0, Math.max(b1.x, b2.x) - Math.min(b1.x + b1.w, b2.x + b2.w));
+      const gapY = Math.max(0, Math.max(b1.y, b2.y) - Math.min(b1.y + b1.h, b2.y + b2.h));
+
+      if (gapX <= 4 && gapY <= 4) {
+        const nx = Math.min(b1.x, b2.x);
+        const ny = Math.min(b1.y, b2.y);
+        b1.w = Math.max(b1.x + b1.w, b2.x + b2.w) - nx;
+        b1.h = Math.max(b1.y + b1.h, b2.y + b2.h) - ny;
+        b1.x = nx; b1.y = ny;
+        used[j] = 1;
+      }
+    }
+    merged.push(b1);
+  }
+  return merged;
+}
+
+function clusterIntoRows() {
+  if (!detectedBoxes.length) { detectedRows = []; return; }
+  detectedBoxes.sort((a, b) => a.y - b.y);
+
+  let rows = [];
+  let curRow = [detectedBoxes[0]];
+  let curY = detectedBoxes[0].y;
+
+  for (let i = 1; i < detectedBoxes.length; i++) {
+    const b = detectedBoxes[i];
+    if (Math.abs(b.y - curY) < 36) {
+      curRow.push(b);
+    } else {
+      curRow.sort((a, b) => a.x - b.x);
+      rows.push(curRow);
+      curRow = [b];
+      curY = b.y;
+    }
+  }
+  if (curRow.length) {
+    curRow.sort((a, b) => a.x - b.x);
+    rows.push(curRow);
+  }
+
+  detectedRows = rows;
+  detectedBoxes = rows.flat();
+}
+
+/* =========================================================================
+   4. SMART AUTO-MAPPING TO MOVE HIERARCHY
+   ========================================================================= */
+function smartAutoFillAll() {
+  if (!detectedRows.length) runSmartAutoDetect();
+  if (!detectedRows.length) return;
+
+  assignedSprites = {};
+
+  // Standard Capcom Street Fighter sprite layout sequence
+  if (detectedRows[0]) {
+    assignSliceToMove("stance", detectedRows[0].slice(0, 6));
+    if (detectedRows[0].length >= 9) assignSliceToMove("crouch", detectedRows[0].slice(6, 9));
+    if (detectedRows[0].length >= 12) assignSliceToMove("turn", detectedRows[0].slice(9, 12));
+  }
+  if (detectedRows[1]) {
+    assignSliceToMove("f-walk", detectedRows[1].slice(0, 6));
+    if (detectedRows[1].length >= 12) assignSliceToMove("b-walk", detectedRows[1].slice(6, 12));
+  }
+  if (detectedRows[2]) {
+    assignSliceToMove("jump", detectedRows[2].slice(0, 7));
+  }
+  if (detectedRows[3]) {
+    assignSliceToMove("p1", detectedRows[3].slice(0, 3));
+    assignSliceToMove("p2", detectedRows[3].slice(3, 7));
+    assignSliceToMove("p3", detectedRows[3].slice(7, 11));
+  }
+  if (detectedRows[4]) {
+    assignSliceToMove("k1", detectedRows[4].slice(0, 4));
+    assignSliceToMove("k2", detectedRows[4].slice(4, 9));
+    assignSliceToMove("k3", detectedRows[4].slice(9, 14));
+  }
+  if (detectedRows[5]) {
+    assignSliceToMove("c-p1", detectedRows[5].slice(0, 3));
+    assignSliceToMove("c-p2", detectedRows[5].slice(3, 6));
+    assignSliceToMove("c-p3", detectedRows[5].slice(6, 10));
+  }
+  if (detectedRows[6]) {
+    assignSliceToMove("c-k1", detectedRows[6].slice(0, 3));
+    assignSliceToMove("c-k2", detectedRows[6].slice(3, 7));
+    assignSliceToMove("c-k3", detectedRows[6].slice(7, 12));
+  }
+  if (detectedRows[7]) {
+    assignSliceToMove("jump_p1", detectedRows[7].slice(0, 3));
+    assignSliceToMove("jump_p2", detectedRows[7].slice(3, 6));
+    assignSliceToMove("jump_p3", detectedRows[7].slice(6, 9));
+  }
+  if (detectedRows[8]) {
+    assignSliceToMove("jump_k1", detectedRows[8].slice(0, 3));
+    assignSliceToMove("jump_k2", detectedRows[8].slice(3, 7));
+    assignSliceToMove("jump_k3", detectedRows[8].slice(7, 11));
+  }
+  if (detectedRows[9]) assignSliceToMove("fireball", detectedRows[9].slice(0, 4));
+  if (detectedRows[10]) assignSliceToMove("uppercut", detectedRows[10].slice(0, 6));
+  if (detectedRows[11]) assignSliceToMove("spinkick", detectedRows[11].slice(0, 7));
+
+  if (detectedRows[12]) {
+    assignSliceToMove("hit-sln", detectedRows[12].slice(0, 3));
+    assignSliceToMove("hit-smn", detectedRows[12].slice(3, 6));
+    assignSliceToMove("hit-shn", detectedRows[12].slice(6, 9));
+  }
+  if (detectedRows[13]) {
+    assignSliceToMove("hit-air", detectedRows[13].slice(0, 4));
+    assignSliceToMove("down", detectedRows[13].slice(4, 5));
+    assignSliceToMove("getup", detectedRows[13].slice(5, 9));
+  }
+  if (detectedRows[14]) {
+    assignSliceToMove("win", detectedRows[14].slice(0, 4));
+  }
+
+  // Active Hit Strike Flags
+  markHitActive("p1", 1, 10); markHitActive("p2", 1, 15); markHitActive("p3", 2, 20);
+  markHitActive("k1", 2, 10); markHitActive("k2", 2, 15); markHitActive("k3", 2, 20);
+  markHitActive("c-p1", 1, 10); markHitActive("c-p2", 1, 15); markHitActive("c-p3", 2, 20);
+  markHitActive("c-k1", 1, 10); markHitActive("c-k2", 2, 15); markHitActive("c-k3", 1, 20);
+  markHitActive("uppercut", 2, 25);
+  markHitActive("spinkick", 3, 20);
+
+  // Auto-stabilize foot baselines so characters don't bounce vertically
+  MOVES.forEach(m => autoStabilizeMoveBaseline(m.id));
+
+  buildMovesSidebar();
+  selectMove("stance");
+  drawSheetCanvas();
+  renderMiniPreview();
+  alert(`Auto-detected ${detectedBoxes.length} tight frames across ${detectedRows.length} rows and mapped all moves!`);
+}
+
+function assignSliceToMove(moveId, boxList) {
+  const m = MOVES.find(x => x.id === moveId);
+  if (!m || !boxList.length) return;
+  m.frames = boxList.length;
+  boxList.forEach((box, i) => {
+    assignedSprites[`${moveId}_${i}`] = {
+      x: box.x, y: box.y, w: box.w, h: box.h,
+      offX: box.offX || 0,
+      offY: box.offY || 0,
+      hit: !!box.hit,
+      damage: box.damage || 15
+    };
+  });
+}
+
+function markHitActive(moveId, frameIdx, dmg) {
+  const key = `${moveId}_${frameIdx}`;
+  if (assignedSprites[key]) {
+    assignedSprites[key].hit = true;
+    assignedSprites[key].damage = dmg;
+  }
+}
+
+function autoStabilizeMoveBaseline(moveId) {
+  const m = MOVES.find(x => x.id === moveId);
+  if (!m) return;
+  
+  let baseH = 247;
+  const s0 = assignedSprites["stance_0"];
+  if (s0) baseH = s0.h;
+
+  for (let i = 0; i < m.frames; i++) {
+    const b = assignedSprites[`${moveId}_${i}`];
+    if (b) {
+      b.offY = (baseH - b.h);
+    }
+  }
+}
+
+function autoStabilizeCurrentMove() {
+  autoStabilizeMoveBaseline(currentMove);
+  loadActiveFrameDetails();
+  renderMiniPreview();
+}
+
+function resetFrameOffsets() {
+  const m = MOVES.find(x => x.id === currentMove);
+  if (!m) return;
+  for (let i = 0; i < m.frames; i++) {
+    const b = assignedSprites[`${currentMove}_${i}`];
+    if (b) { b.offX = 0; b.offY = 0; }
+  }
+  loadActiveFrameDetails();
+  renderMiniPreview();
+}
+
+/* =========================================================================
+   5. JS FILES IMPORTER & REVERSE-ENGINEERING
+   ========================================================================= */
+function setupJSFilesImporter() {
+  const input = document.getElementById("jsFilesInput");
+  input.addEventListener("change", function(e) {
+    const files = Array.from(e.target.files);
+    if (!files.length) return;
+
+    let filesLoaded = 0;
+    files.forEach(file => {
+      const reader = new FileReader();
+      reader.onload = ev => {
+        parseLoadedJSFile(ev.target.result, file.name);
+        filesLoaded++;
+        if (filesLoaded === files.length) {
+          postImportSync();
+        }
+      };
+      reader.readAsText(file);
+    });
+  });
+}
+
+function parseLoadedJSFile(code, fileName) {
+  const regex = /spriteLookup_\.load\s*\(\s*["']([^"']+)["']\s*,\s*["']([^"']+)["']\s*,\s*["'](-?\d+)px?["']\s*,\s*["'](-?\d+)px?["']\s*,\s*["'](\d+)px?["']\s*,\s*["'](\d+)px?["']/g;
+  let match;
+  while ((match = regex.exec(code)) !== null) {
+    const filePath = match[1];
+    const x = Math.abs(parseInt(match[3]));
+    const y = Math.abs(parseInt(match[4]));
+    const w = parseInt(match[5]);
+    const h = parseInt(match[6]);
+
+    const parts = filePath.split('/');
+    const fname = parts.pop().replace(/\.png$/i, "");
+    const dashIdx = fname.lastIndexOf('-');
+
+    if (dashIdx !== -1) {
+      let rawMove = fname.slice(0, dashIdx).replace(/^(r|x)-/, "");
+      const frameIdx = parseInt(fname.slice(dashIdx + 1));
+
+      if (rawMove.startsWith("fb-projectile")) continue;
+      if (rawMove === "hk") rawMove = "spinkick";
+      if (rawMove === "uppercut-p1") rawMove = "uppercut";
+      if (rawMove === "fb") rawMove = "fireball";
+
+      const m = MOVES.find(x => x.id === rawMove);
+      if (m) {
+        const key = `${m.id}_${frameIdx}`;
+        assignedSprites[key] = { x, y, w, h, offX: 0, offY: 0, hit: false, damage: 15 };
+        if (frameIdx >= m.frames) m.frames = frameIdx + 1;
+      }
+    }
+  }
+
+  const charMatch = code.match(/new\s+Player\s*\(\s*["']([^"']+)["']/i);
+  if (charMatch) {
+    document.getElementById("charName").value = charMatch[1];
+    document.getElementById("lblP1Name").innerText = charMatch[1].toUpperCase() + " (P1)";
+  }
+}
+
+function postImportSync() {
+  detectedBoxes = Object.values(assignedSprites).map(b => ({
+    x: b.x, y: b.y, w: b.w, h: b.h, offX: b.offX || 0, offY: b.offY || 0, hit: !!b.hit, damage: 15
+  }));
+  clusterIntoRows();
+  buildMovesSidebar();
+  selectMove("stance");
+  drawSheetCanvas();
+  renderMiniPreview();
+  alert("Sprites & configuration mapped directly from uploaded JS file!");
+}
+
+/* =========================================================================
+   6. UI CONTROLS & SIDEBARS
+   ========================================================================= */
+function switchView(viewName) {
+  const isStudio = (viewName === 'studio');
+  document.getElementById("viewStudio").classList.toggle("hidden", !isStudio);
+  document.getElementById("viewArena").classList.toggle("hidden", isStudio);
+  document.getElementById("tabStudioBtn").classList.toggle("active", isStudio);
+  document.getElementById("tabArenaBtn").classList.toggle("active", !isStudio);
+  if (isStudio) resizeSheetCanvas();
+}
+
+function buildMovesSidebar() {
+  const container = document.getElementById("movesList");
+  container.innerHTML = "";
+
+  MOVES.forEach(m => {
+    const row = document.createElement("div");
+    row.className = "move-row" + (m.id === currentMove ? " active" : "");
+    row.onclick = (e) => {
+      if (!e.target.classList.contains("frame-pill")) selectMove(m.id);
+    };
+
+    const header = document.createElement("div");
+    header.className = "move-header";
+    header.innerHTML = `<span>${m.name}</span><span style="font-size:0.65rem; color:var(--text-muted);">${m.frames}f</span>`;
+    row.appendChild(header);
+
+    const strip = document.createElement("div");
+    strip.className = "frame-strip";
+    for (let i = 0; i < m.frames; i++) {
+      const pill = document.createElement("div");
+      pill.className = "frame-pill";
+      pill.innerText = i;
+      const key = `${m.id}_${i}`;
+      if (assignedSprites[key]) pill.classList.add("assigned");
+      if (m.id === currentMove && i === currentSlot) pill.classList.add("active");
+
+      pill.onclick = (e) => {
+        e.stopPropagation();
+        selectMove(m.id);
+        selectSlot(i);
+      };
+      strip.appendChild(pill);
+    }
+    row.appendChild(strip);
+    container.appendChild(row);
+  });
+}
+
+function selectMove(moveId) {
+  currentMove = moveId;
+  currentSlot = 0;
+  buildMovesSidebar();
+  loadActiveFrameDetails();
+  renderMiniPreview();
+}
+
+function selectSlot(slotIdx) {
+  currentSlot = slotIdx;
+  buildMovesSidebar();
+  loadActiveFrameDetails();
+  renderMiniPreview();
+}
+
+function setGlobalScale(val) {
+  globalScale = parseFloat(val);
+  document.getElementById("rngArenaScale").value = globalScale;
+  document.getElementById("lblArenaScale").innerText = globalScale.toFixed(2) + "x";
+  document.getElementById("lblArenaHeight").innerText = Math.round(247 * globalScale) + "px";
+  renderMiniPreview();
+}
+
+function loadActiveFrameDetails() {
+  const key = `${currentMove}_${currentSlot}`;
+  const b = assignedSprites[key];
+  if (b) {
+    document.getElementById("lblCurOffsetY").innerText = (b.offY || 0) + "px";
+    document.getElementById("rngFrameOffsetY").value = b.offY || 0;
+    document.getElementById("lblCurOffsetX").innerText = (b.offX || 0) + "px";
+    document.getElementById("rngFrameOffsetX").value = b.offX || 0;
+    document.getElementById("chkFrameIsHit").checked = !!b.hit;
+    document.getElementById("numDamage").value = b.damage || 15;
+  }
+}
+
+function adjustActiveFrameOffset(axis, val) {
+  const key = `${currentMove}_${currentSlot}`;
+  if (!assignedSprites[key]) return;
+  if (axis === 'y') {
+    assignedSprites[key].offY = val;
+    document.getElementById("lblCurOffsetY").innerText = val + "px";
+  } else {
+    assignedSprites[key].offX = val;
+    document.getElementById("lblCurOffsetX").innerText = val + "px";
+  }
+  renderMiniPreview();
+}
+
+function toggleActiveFrameHit(isHit) {
+  const key = `${currentMove}_${currentSlot}`;
+  if (assignedSprites[key]) assignedSprites[key].hit = isHit;
+}
+
+function setActiveFrameProp(prop, val) {
+  const key = `${currentMove}_${currentSlot}`;
+  if (assignedSprites[key]) assignedSprites[key][prop] = val;
+}
+
+/* =========================================================================
+   7. SLICER CANVAS PAN, ZOOM, EYEDROPPER & PREVIEW
+   ========================================================================= */
+function resizeSheetCanvas() {
+  if (!sheetCanvas || !sheetViewport) return;
+  sheetCanvas.width = sheetViewport.clientWidth;
+  sheetCanvas.height = sheetViewport.clientHeight;
+  drawSheetCanvas();
+}
+
+function resetZoom() {
+  if (!sheetReady) return;
+  zoom = Math.min((sheetCanvas.width - 60) / rawSheetImg.width, (sheetCanvas.height - 60) / rawSheetImg.height, 1);
+  panX = (sheetCanvas.width - rawSheetImg.width * zoom) / 2;
+  panY = (sheetCanvas.height - rawSheetImg.height * zoom) / 2;
+  document.getElementById("lblZoom").innerText = Math.round(zoom * 100) + "%";
+  drawSheetCanvas();
+}
+
+function changeZoom(factor) {
+  zoom = Math.max(0.1, Math.min(4.0, zoom * factor));
+  document.getElementById("lblZoom").innerText = Math.round(zoom * 100) + "%";
+  drawSheetCanvas();
+}
+
+function setupSheetEvents() {
+  window.addEventListener("keydown", e => {
+    if (e.code === "Space") spaceKey = true;
+    if (e.code === "Delete" || e.code === "Backspace") deleteSelectedBox();
+  });
+  window.addEventListener("keyup", e => {
+    if (e.code === "Space") spaceKey = false;
+  });
+
+  sheetCanvas.addEventListener("mousedown", e => {
+    const rect = sheetCanvas.getBoundingClientRect();
+    const mx = e.clientX - rect.left;
+    const my = e.clientY - rect.top;
+
+    // Eyedropper click handler
+    if (eyedropperActive && e.button === 0) {
+      const wx = Math.floor((mx - panX) / zoom);
+      const wy = Math.floor((my - panY) / zoom);
+      if (wx >= 0 && wx < rawSheetImg.width && wy >= 0 && wy < rawSheetImg.height) {
+        const off = document.createElement("canvas");
+        off.width = 1; off.height = 1;
+        const octx = off.getContext("2d");
+        octx.drawImage(rawSheetImg, wx, wy, 1, 1, 0, 0, 1, 1);
+        const p = octx.getImageData(0, 0, 1, 1).data;
+        customChroma = { r: p[0], g: p[1], b: p[2] };
+        const hex = "#" + ((1 << 24) + (p[0] << 16) + (p[1] << 8) + p[2]).toString(16).slice(1);
+        document.getElementById("colChroma").value = hex;
+        document.getElementById("lblChromaInfo").innerText = `RGB(${p[0]},${p[1]},${p[2]})`;
+        toggleEyedropper();
+        refreshSheetChromaClean();
+        runSmartAutoDetect();
+      }
+      return;
+    }
+
+    if (spaceKey || e.button === 1 || e.button === 2) {
+      isPanning = true;
+      startPanX = mx - panX;
+      startPanY = my - panY;
+      return;
+    }
+
+    const wx = (mx - panX) / zoom;
+    const wy = (my - panY) / zoom;
+
+    for (let i = 0; i < detectedBoxes.length; i++) {
+      const b = detectedBoxes[i];
+      if (wx >= b.x && wx <= b.x + b.w && wy >= b.y && wy <= b.y + b.h) {
+        selectedBox = { ...b };
+        assignBoxToActiveSlot(selectedBox);
+        drawSheetCanvas();
+        return;
+      }
+    }
+  });
+
+  sheetCanvas.addEventListener("contextmenu", e => e.preventDefault());
+
+  window.addEventListener("mousemove", e => {
+    if (isPanning) {
+      const rect = sheetCanvas.getBoundingClientRect();
+      panX = (e.clientX - rect.left) - startPanX;
+      panY = (e.clientY - rect.top) - startPanY;
+      drawSheetCanvas();
+    }
+  });
+
+  window.addEventListener("mouseup", () => { isPanning = false; });
+
+  sheetCanvas.addEventListener("wheel", e => {
+    e.preventDefault();
+    changeZoom(e.deltaY < 0 ? 1.15 : 0.85);
+  });
+}
+
+function assignBoxToActiveSlot(box) {
+  const key = `${currentMove}_${currentSlot}`;
+  assignedSprites[key] = {
+    x: box.x, y: box.y, w: box.w, h: box.h,
+    offX: 0, offY: 0, hit: false, damage: 15
+  };
+  const m = MOVES.find(x => x.id === currentMove);
+  if (currentSlot < m.frames - 1) currentSlot++;
+  buildMovesSidebar();
+  loadActiveFrameDetails();
+  renderMiniPreview();
+}
+
+function splitSelectedBox(parts) {
+  if (!selectedBox) return;
+  const idx = detectedBoxes.findIndex(b => b.x === selectedBox.x && b.y === selectedBox.y);
+  if (idx === -1) return;
+
+  const orig = detectedBoxes[idx];
+  detectedBoxes.splice(idx, 1);
+  const partW = Math.floor(orig.w / parts);
+
+  for (let p = 0; p < parts; p++) {
+    detectedBoxes.push({
+      x: orig.x + p * partW,
+      y: orig.y,
+      w: partW,
+      h: orig.h,
+      offX: 0, offY: 0, hit: false, damage: 15
+    });
+  }
+  clusterIntoRows();
+  selectedBox = null;
+  drawSheetCanvas();
+}
+
+function deleteSelectedBox() {
+  if (!selectedBox) return;
+  detectedBoxes = detectedBoxes.filter(b => !(b.x === selectedBox.x && b.y === selectedBox.y));
+  Object.keys(assignedSprites).forEach(k => {
+    const ab = assignedSprites[k];
+    if (ab.x === selectedBox.x && ab.y === selectedBox.y) delete assignedSprites[k];
+  });
+  selectedBox = null;
+  clusterIntoRows();
+  buildMovesSidebar();
+  drawSheetCanvas();
+  renderMiniPreview();
+}
+
+function assignRowToActiveMove() {
+  if (!selectedBox) {
+    alert("Select a box in the target row first!");
+    return;
+  }
+  const rowY = selectedBox.y;
+  const rowBoxes = detectedBoxes.filter(b => Math.abs(b.y - rowY) < 36).sort((a,b) => a.x - b.x);
+  assignSliceToMove(currentMove, rowBoxes);
+  buildMovesSidebar();
+  drawSheetCanvas();
+  renderMiniPreview();
+}
+
+function drawSheetCanvas() {
+  sctx.clearRect(0, 0, sheetCanvas.width, sheetCanvas.height);
+  if (!sheetReady) {
+    sctx.fillStyle = "#666";
+    sctx.font = "14px monospace";
+    sctx.textAlign = "center";
+    sctx.fillText("Upload Spritesheet PNG to Auto-Detect Moves", sheetCanvas.width / 2, sheetCanvas.height / 2);
+    return;
+  }
+
+  sctx.save();
+  sctx.translate(panX, panY);
+  sctx.scale(zoom, zoom);
+
+  // Render raw spritesheet
+  sctx.drawImage(rawSheetImg, 0, 0);
+
+  // Draw green detected bounding boxes around every fighter frame
+  detectedBoxes.forEach(b => {
+    sctx.strokeStyle = "rgba(46, 213, 115, 0.6)";
+    sctx.lineWidth = 1 / zoom;
+    sctx.strokeRect(b.x, b.y, b.w, b.h);
+  });
+
+  // Solid green boxes with assigned move labels
+  Object.keys(assignedSprites).forEach(k => {
+    const b = assignedSprites[k];
+    sctx.strokeStyle = "#2ed573";
+    sctx.lineWidth = 2 / zoom;
+    sctx.strokeRect(b.x, b.y, b.w, b.h);
+    sctx.fillStyle = "#2ed573";
+    sctx.font = `bold ${Math.max(9, 10 / zoom)}px monospace`;
+    sctx.fillText(k, b.x, b.y - 2);
+  });
+
+  // Active user selection
+  if (selectedBox) {
+    sctx.strokeStyle = "#ff4757";
+    sctx.lineWidth = 2.5 / zoom;
+    sctx.strokeRect(selectedBox.x, selectedBox.y, selectedBox.w, selectedBox.h);
+  }
+
+  sctx.restore();
+}
+
+function togglePlayPreview() {
+  isPreviewPlaying = !isPreviewPlaying;
+  document.getElementById("btnPlayPause").innerText = isPreviewPlaying ? "Pause" : "Play";
+}
+
+function renderMiniPreview() {
+  mctx.clearRect(0, 0, miniCanvas.width, miniCanvas.height);
+  const m = MOVES.find(x => x.id === currentMove);
+  if (!m || !sheetReady) return;
+
+  const key = `${currentMove}_${previewFrame}`;
+  const box = assignedSprites[key] || assignedSprites[`${currentMove}_0`];
+  if (!box) {
+    mctx.fillStyle = "#555";
+    mctx.font = "11px monospace";
+    mctx.textAlign = "center";
+    mctx.fillText(`[${currentMove}] Frame ${previewFrame} Empty`, miniCanvas.width / 2, miniCanvas.height / 2);
+    return;
+  }
+
+  mctx.strokeStyle = "rgba(255, 71, 87, 0.4)";
+  mctx.beginPath();
+  mctx.moveTo(0, miniCanvas.height - 15);
+  mctx.lineTo(miniCanvas.width, miniCanvas.height - 15);
+  mctx.stroke();
+
+  const previewScale = Math.min((miniCanvas.width - 20) / (box.w * globalScale), (miniCanvas.height - 30) / (box.h * globalScale));
+  const finalScale = previewScale * globalScale;
+
+  const dw = box.w * finalScale;
+  const dh = box.h * finalScale;
+  const dx = (miniCanvas.width - dw) / 2 + (box.offX || 0) * previewScale;
+  const dy = (miniCanvas.height - 15) - dh - (box.offY || 0) * previewScale;
+
+  const imgSource = document.getElementById("chkRemoveChroma").checked ? cleanSheetCanvas : rawSheetImg;
+  mctx.drawImage(imgSource, box.x, box.y, box.w, box.h, dx, dy, dw, dh);
+
+  if (box.hit) {
+    mctx.strokeStyle = "rgba(255, 71, 87, 0.9)";
+    mctx.lineWidth = 2;
+    mctx.strokeRect(dx + dw * 0.2, dy + dh * 0.2, dw * 0.7, dh * 0.4);
+  }
+}
+
+/* =========================================================================
+   8. REAL-TIME ARENA COMBAT LOGIC
+   ========================================================================= */
+function setupArenaInputs() {
+  window.addEventListener("keydown", e => {
+    const k = e.key.toUpperCase();
+    keys[k] = true;
+    if (["ARROWUP","ARROWDOWN","ARROWLEFT","ARROWRIGHT"," "].includes(k)) e.preventDefault();
+  });
+  window.addEventListener("keyup", e => {
+    keys[e.key.toUpperCase()] = false;
+  });
+}
+
+function updateArena() {
+  if (P1.hitCooldown > 0) P1.hitCooldown--;
+  if (P1.stunTicks > 0) P1.stunTicks--;
+  if (Dummy.hitFlash > 0) Dummy.hitFlash--;
+  if (Dummy.stunTimer > 0) Dummy.stunTimer--;
+
+  if (!P1.isAirborne) {
+    P1.direction = (P1.x < Dummy.x) ? -1 : 1;
+  }
+  Dummy.direction = (Dummy.x < P1.x) ? 1 : -1;
+
+  const isAttacking = [
+    "p1","p2","p3","k1","k2","k3",
+    "c-p1","c-p2","c-p3","c-k1","c-k2","c-k3",
+    "jump_p1","jump_p2","jump_p3","jump_k1","jump_k2","jump_k3",
+    "fireball","uppercut","spinkick"
+  ].includes(P1.state);
+
+  const isCrouching = keys["ARROWDOWN"];
+
+  if (P1.isAirborne && !isAttacking && P1.stunTicks === 0) {
+    if (keys["A"]) triggerAttack("jump_p1");
+    else if (keys["S"]) triggerAttack("jump_p2");
+    else if (keys["D"]) triggerAttack("jump_p3");
+    else if (keys["Z"]) triggerAttack("jump_k1");
+    else if (keys["X"]) triggerAttack("jump_k2");
+    else if (keys["C"]) triggerAttack("jump_k3");
+  } 
+  else if (!P1.isAirborne && !isAttacking && P1.stunTicks === 0) {
+    if (isCrouching) {
+      if (keys["A"]) triggerAttack("c-p1");
+      else if (keys["S"]) triggerAttack("c-p2");
+      else if (keys["D"]) triggerAttack("c-p3");
+      else if (keys["Z"]) triggerAttack("c-k1");
+      else if (keys["X"]) triggerAttack("c-k2");
+      else if (keys["C"]) triggerAttack("c-k3");
+      else {
+        P1.state = "crouch";
+        P1.vx = 0;
+      }
+    } else {
+      if (keys["Q"]) triggerAttack("fireball");
+      else if (keys["W"]) triggerAttack("uppercut");
+      else if (keys["E"]) triggerAttack("spinkick");
+      else if (keys["A"]) triggerAttack("p1");
+      else if (keys["S"]) triggerAttack("p2");
+      else if (keys["D"]) triggerAttack("p3");
+      else if (keys["Z"]) triggerAttack("k1");
+      else if (keys["X"]) triggerAttack("k2");
+      else if (keys["C"]) triggerAttack("k3");
+      else if (keys["ARROWUP"]) {
+        P1.isAirborne = true;
+        P1.jumpT = 0;
+        P1.jumpVy = ARENA.jumpVy;
+        P1.state = "jump";
+        P1.frameIdx = 0;
+        P1.timer = 0;
+
+        if (keys["ARROWRIGHT"]) {
+          P1.jumpVx = (P1.direction === -1) ? ARENA.jumpVx : -ARENA.jumpVx;
+        } else if (keys["ARROWLEFT"]) {
+          P1.jumpVx = (P1.direction === -1) ? -ARENA.jumpVx : ARENA.jumpVx;
+        } else {
+          P1.jumpVx = 0;
+        }
+      } else if (keys["ARROWRIGHT"]) {
+        const isFwd = (P1.direction === -1);
+        P1.state = isFwd ? "f-walk" : "b-walk";
+        P1.vx = isFwd ? 4.0 : -3.0;
+      } else if (keys["ARROWLEFT"]) {
+        const isFwd = (P1.direction === 1);
+        P1.state = isFwd ? "f-walk" : "b-walk";
+        P1.vx = isFwd ? -4.0 : 3.0;
+      } else {
+        P1.state = "stance";
+        P1.vx = 0;
+      }
+    }
+  }
+
+  // Exact SF2 Airborne Parabolic Equation
+  if (P1.isAirborne) {
+    P1.jumpT += P1.jumpSpeed;
+    const curY = ((P1.jumpVy * P1.jumpT) - (CONSTANTS.HALF_G * P1.jumpT * P1.jumpT)) * CONSTANTS.Y_DAMPING;
+    P1.y = Math.max(0, curY);
+
+    const dx = P1.jumpVx * CONSTANTS.X_DAMPING * P1.jumpSpeed;
+    P1.x += (P1.direction === -1) ? dx : -dx;
+
+    if (P1.jumpT > 5 && P1.y <= 0) {
+      P1.y = 0;
+      P1.jumpT = 0;
+      P1.jumpVx = 0;
+      P1.isAirborne = false;
+      P1.state = isCrouching ? "crouch" : "stance";
+      P1.frameIdx = 0;
+      P1.timer = 0;
+    }
+  } else if (!isAttacking) {
+    P1.x += P1.vx;
+  }
+
+  P1.x = Math.max(60, Math.min(stageCanvas.width - 60, P1.x));
+  Dummy.x = Math.max(60, Math.min(stageCanvas.width - 60, Dummy.x));
+
+  const m = MOVES.find(x => x.id === P1.state) || MOVES[0];
+  P1.timer++;
+  if (P1.timer >= m.speed) {
+    P1.timer = 0;
+    P1.frameIdx++;
+    if (P1.frameIdx >= m.frames) {
+      if (isAttacking || P1.state === "hit-sln" || P1.state === "getup") {
+        if (P1.isAirborne) {
+          P1.state = "jump";
+          P1.frameIdx = 3;
+        } else {
+          P1.state = keys["ARROWDOWN"] ? "crouch" : "stance";
+          P1.frameIdx = 0;
+        }
+      } else if (m.loop) {
+        P1.frameIdx = 0;
+      } else {
+        P1.frameIdx = m.frames - 1;
+      }
+    }
+  }
+
+  if (isAttacking) {
+    const key = `${P1.state}_${P1.frameIdx}`;
+    const box = assignedSprites[key];
+    if (box && box.hit && P1.hitCooldown === 0) {
+      const reachMod = P1.isAirborne ? 0.8 : 0.6;
+      const reachX = (P1.direction === -1) ? P1.x + (box.w * globalScale * reachMod) : P1.x - (box.w * globalScale * reachMod);
+
+      if (Math.abs(reachX - Dummy.x) < 95) {
+        const dmg = box.damage || 15;
+        Dummy.hp = Math.max(0, Dummy.hp - dmg);
+        Dummy.hitFlash = 8;
+        Dummy.stunTimer = 12;
+        Dummy.x += (P1.direction === -1) ? 22 : -22;
+        P1.hitCooldown = 22;
+        updateDummyHUD();
+      }
+    }
+  }
+}
+
+function updateDummyHUD() {
+  document.getElementById("hpBarDummy").style.width = Dummy.hp + "%";
+  document.getElementById("lblDummyHpVal").innerText = Dummy.hp + "%";
+}
+
+function triggerAttack(moveId) {
+  P1.state = moveId;
+  P1.frameIdx = 0;
+  P1.timer = 0;
+  P1.vx = 0;
+}
+
+function resetArenaMatch() {
+  P1.x = 200; P1.y = 0; P1.jumpT = 0; P1.vx = 0;
+  P1.hp = 100; P1.state = "stance"; P1.isAirborne = false;
+  Dummy.x = 520; Dummy.hp = 100; Dummy.hitFlash = 0;
+
+  document.getElementById("hpBarP1").style.width = "100%";
+  document.getElementById("lblP1HpVal").innerText = "100%";
+  updateDummyHUD();
+}
+
+function drawArena() {
+  actx.clearRect(0, 0, stageCanvas.width, stageCanvas.height);
+
+  if (document.getElementById("chkFloorLine").checked) {
+    actx.strokeStyle = "rgba(255, 71, 87, 0.7)";
+    actx.lineWidth = 2;
+    actx.beginPath();
+    actx.moveTo(0, GROUND_Y);
+    actx.lineTo(stageCanvas.width, GROUND_Y);
+    actx.stroke();
+  }
+
+  drawDummyOpponent();
+  drawPlayerFighter();
+}
+
+function drawPlayerFighter() {
+  const key = `${P1.state}_${P1.frameIdx}`;
+  const box = assignedSprites[key] || assignedSprites[`${P1.state}_0`] || assignedSprites["stance_0"] || { x:0, y:0, w:80, h:120, offX:0, offY:0 };
+
+  const scaledW = box.w * globalScale;
+  const scaledH = box.h * globalScale;
+  const offX = (box.offX || 0) * globalScale;
+  const offY = (box.offY || 0) * globalScale;
+
+  const renderX = P1.x + ((P1.direction === -1 ? 1 : -1) * offX);
+  const renderY = GROUND_Y - P1.y - scaledH - offY;
+
+  // Floor Shadow
+  actx.fillStyle = "rgba(0,0,0,0.45)";
+  actx.beginPath();
+  actx.ellipse(P1.x, GROUND_Y, 40 * globalScale, 10, 0, 0, Math.PI * 2);
+  actx.fill();
+
+  if (sheetReady) {
+    actx.save();
+    const invertFlip = document.getElementById("chkInvertFlip").checked;
+    const shouldFlip = (P1.direction === -1) ? invertFlip : !invertFlip;
+
+    const imgSource = document.getElementById("chkRemoveChroma").checked ? cleanSheetCanvas : rawSheetImg;
+
+    if (shouldFlip) {
+      actx.translate(renderX, 0);
+      actx.scale(-1, 1);
+      actx.drawImage(imgSource, box.x, box.y, box.w, box.h, -scaledW/2, renderY, scaledW, scaledH);
+    } else {
+      actx.drawImage(imgSource, box.x, box.y, box.w, box.h, renderX - scaledW/2, renderY, scaledW, scaledH);
+    }
+    actx.restore();
+  } else {
+    actx.fillStyle = "#1e90ff";
+    actx.fillRect(renderX - scaledW/2, renderY, scaledW, scaledH);
+  }
+
+  // Hitbox / Hurtbox Overlay
+  if (document.getElementById("chkHitboxes").checked) {
+    actx.strokeStyle = "rgba(46, 213, 115, 0.85)";
+    actx.lineWidth = 2;
+    actx.strokeRect(renderX - (scaledW * 0.35), renderY, scaledW * 0.7, scaledH);
+
+    if (box.hit) {
+      actx.strokeStyle = "rgba(255, 71, 87, 0.95)";
+      actx.lineWidth = 2.5;
+      const hitX = (P1.direction === -1) ? renderX + (scaledW * 0.1) : renderX - (scaledW * 0.6);
+      actx.strokeRect(hitX, renderY + (scaledH * 0.25), scaledW * 0.5, scaledH * 0.35);
+    }
+  }
+
+  const charLabel = document.getElementById("charName").value.toUpperCase();
+  actx.fillStyle = "#fff";
+  actx.font = "11px monospace";
+  actx.fillText(`${charLabel} [${P1.state}]`, renderX - 40, renderY - 10);
+}
+
+function drawDummyOpponent() {
+  const dx = Dummy.x - (Dummy.w / 2);
+  const dy = GROUND_Y - Dummy.h;
+
+  actx.fillStyle = "rgba(0,0,0,0.45)";
+  actx.beginPath();
+  actx.ellipse(Dummy.x, GROUND_Y, 50, 12, 0, 0, Math.PI * 2);
+  actx.fill();
+
+  actx.fillStyle = (Dummy.hitFlash > 0) ? "rgba(255, 71, 87, 0.7)" : "rgba(255, 165, 2, 0.25)";
+  actx.fillRect(dx, dy, Dummy.w, Dummy.h);
+
+  actx.strokeStyle = "var(--gold)";
+  actx.lineWidth = 2;
+  actx.strokeRect(dx, dy, Dummy.w, Dummy.h);
+
+  actx.fillStyle = "var(--gold)";
+  actx.font = "bold 12px monospace";
+  actx.fillText("SAGAT DUMMY", dx + 15, dy - 8);
+}
+
+function masterLoop(timestamp) {
+  if (isPreviewPlaying && sheetReady) {
+    if (timestamp - previewTimer > 1000 / previewFps) {
+      previewTimer = timestamp;
+      const m = MOVES.find(x => x.id === currentMove);
+      if (m && m.frames > 0) {
+        previewFrame = (previewFrame + 1) % m.frames;
+        renderMiniPreview();
+      }
+    }
+  }
+
+  if (!document.getElementById("viewArena").classList.contains("hidden")) {
+    updateArena();
+    drawArena();
+  }
+
+  requestAnimationFrame(masterLoop);
+}
+
+/* =========================================================================
+   9. 100% ENGINE SPECIFICATION EXPORT GENERATOR
+   ========================================================================= */
+let activeExportTab = 1;
+
+function openExportModal() {
+  document.getElementById("exportModal").style.display = "flex";
+  showExportTab(activeExportTab);
+}
+function closeExportModal() {
+  document.getElementById("exportModal").style.display = "none";
+}
+
+function showExportTab(tabIdx) {
+  activeExportTab = tabIdx;
+  document.getElementById("tabCode1").classList.toggle("active", tabIdx === 1);
+  document.getElementById("tabCode2").classList.toggle("active", tabIdx === 2);
+
+  const char = document.getElementById("charName").value.trim().toLowerCase() || "ken";
+  const codeBox = document.getElementById("txtExportCode");
+  codeBox.value = (tabIdx === 1) ? buildSpriteDataJS(char) : buildPlayerLogicJS(char);
+}
+
+function buildSpriteDataJS(char) {
+  const cap = char.charAt(0).toUpperCase() + char.slice(1);
+  let js = `/* Generated by Fighter Studio for ${char} */\n`;
+  js += `Create${cap}SpriteData = function(player)\n{\n`;
+  const sheetRelPath = `images/misc/${char}/sprites.png`;
+
+  Object.keys(assignedSprites).forEach(k => {
+    const b = assignedSprites[k];
+    const cleanKey = k.replace(/_/g, '-');
+    const logicalPath = `images/misc/${char}/x-${cleanKey}.png`;
+    js += `\tspriteLookup_.load("${logicalPath}", "${sheetRelPath}", "-${b.x}px", "-${b.y}px", "${b.w}px", "${b.h}px");\n`;
+  });
+
+  js += `};\n`;
+  js += `window.Create${cap}SpriteData = Create${cap}SpriteData;\n`;
+  js += `window.Create${char.toLowerCase()}SpriteData = Create${cap}SpriteData;\n`;
+  return js;
+}
+
+function buildPlayerLogicJS(char) {
+  const cap = char.charAt(0).toUpperCase() + char.slice(1);
+  return `/* Character Controller for ${cap} */
+var create${cap} = function(user)
+{
+    var player = new Player("${char}", 101, 247, user);
+    var folder = "images/misc/" + player.Folder;
+    player.DefaultJumpSpeed = 1.2;
+    player.DefaultShadowImageSrc = "136";
+    player.DizzyOffset = { X: -20, Y: 190 };
+    player.Circle.OffsetY = 50;
+    player.StandingClip.Top = 50;
+    player.StandingClip.Back = 20;
+
+    var f = function(name, idx) { return folder + "/x-" + name + "-" + idx + ".png"; };
+
+    // --- STANCE ---
+    var stance = player.addAnimation(MISC_FLAGS.NONE, "stance", 0, ["stance"], 0, false);
+    stance.Flags = ({ Player: PLAYER_FLAGS.ALLOW_CHANGE_DIRECTION | PLAYER_FLAGS.HOLD_ZINDEX, Pose: POSE_FLAGS.STANDING });
+    for (var i = 0; i < 6; i++) {
+        stance.addRepeatingFrame(player, 0, "", f("stance", i), 4, i === 0 ? { Player: PLAYER_FLAGS.MOBILE } : MISC_FLAGS.NONE);
+    }
+
+    // --- CROUCH ---
+    var crouch = player.addAnimation(POSE_FLAGS.STANDING | POSE_FLAGS.WALKING_BACKWARD | POSE_FLAGS.WALKING_FORWARD, "crouch", 0, [BUTTONS.CROUCH], 99, false);
+    crouch.ButtonSequence.push([{ Button: BUTTONS.CROUCH, State: BUTTON_STATE.PRESSED }, { Button: BUTTONS.JUMP, State: BUTTON_STATE.NONE }]);
+    crouch.ButtonCount = 1;
+    crouch.Flags = ({ Player: PLAYER_FLAGS.ALLOW_CHANGE_DIRECTION | PLAYER_FLAGS.HOLD_ZINDEX, Pose: POSE_FLAGS.CROUCHING });
+    crouch.addFrame(player, 0, "", f("crouch", 0), 2, { Player: PLAYER_FLAGS.MOBILE });
+    crouch.addFrame(player, 0, "", f("crouch", 1), 2, { Player: PLAYER_FLAGS.MUST_HOLD_KEY });
+    crouch.addFrame(player, 0, "", f("crouch", 2), 2, { Player: PLAYER_FLAGS.HOLD_FRAME | PLAYER_FLAGS.MOBILE });
+    crouch.addFrame(player, 0, "", f("crouch", 1), 2);
+    crouch.addFrame(player, 0, "", f("crouch", 0), 2);
+
+    // --- WALKING ---
+    var f_walk = player.addAnimation(POSE_FLAGS.STANDING, "f-walk", 0, [BUTTONS.FORWARD], 90, false);
+    f_walk.ButtonSequence.push([{ Button: BUTTONS.BACK, State: BUTTON_STATE.NONE }, { Button: BUTTONS.FORWARD, State: BUTTON_STATE.PRESSED }]);
+    f_walk.ButtonCount = 1;
+    f_walk.Flags = ({ Player: PLAYER_FLAGS.LOOP_IF_KEYDOWN | PLAYER_FLAGS.HOLD_ZINDEX, Pose: POSE_FLAGS.WALKING_FORWARD });
+    for (var i = 0; i < 6; i++) {
+        f_walk.addRepeatingFrame(player, 0, "", f("f-walk", i), 4, i === 0 ? { Player: PLAYER_FLAGS.MOBILE } : { Player: PLAYER_FLAGS.MUST_HOLD_KEY }, MISC_FLAGS.NONE, 4);
+    }
+
+    var b_walk = player.addAnimation(POSE_FLAGS.STANDING, "b-walk", 0, [BUTTONS.BACK], 80, false);
+    b_walk.ButtonSequence.push([{ Button: BUTTONS.FORWARD, State: BUTTON_STATE.NONE }, { Button: BUTTONS.BACK, State: BUTTON_STATE.PRESSED }]);
+    b_walk.ButtonCount = 1;
+    b_walk.Flags = ({ Player: PLAYER_FLAGS.LOOP_IF_KEYDOWN | PLAYER_FLAGS.HOLD_ZINDEX, Pose: POSE_FLAGS.WALKING_BACKWARD });
+    for (var i = 0; i < 6; i++) {
+        b_walk.addRepeatingFrame(player, 0, "", f("b-walk", i), 4, i === 0 ? { Player: PLAYER_FLAGS.MOBILE } : { Player: PLAYER_FLAGS.MUST_HOLD_KEY }, MISC_FLAGS.NONE, -3);
+    }
+
+    // --- JUMPING ---
+    var jump_land = player.addAnimation(MISC_FLAGS.NONE, "jump land", 0, ["jump-land"], 0, false);
+    jump_land.addFrameWithSound(player, 1, "audio/misc/jump-land.zzz", 0, "", f("crouch", 0), 2, { Player: PLAYER_FLAGS.MOBILE });
+
+    var jump = player.addAnimation(POSE_FLAGS.STANDING | POSE_FLAGS.WALKING_FORWARD | POSE_FLAGS.WALKING_BACKWARD, "jump", 0, [BUTTONS.JUMP], 95, false);
+    jump.ButtonSequence.push([{ Button: BUTTONS.JUMP, State: BUTTON_STATE.PRESSED }, { Button: BUTTONS.BACK, State: BUTTON_STATE.NONE }, { Button: BUTTONS.FORWARD, State: BUTTON_STATE.NONE }]);
+    jump.ButtonCount = 1;
+    jump.UseJumpSpeed = true;
+    jump.Vy = 200;
+    jump.addRepeatingFrame(player, 0, "", f("crouch", 0), 4);
+    for (var i = 0; i < 6; i++) {
+        jump.addRepeatingFrame(player, 0, "", f("jump", i), 6, i === 0 ? { Pose: POSE_FLAGS.AIRBORNE } : MISC_FLAGS.NONE);
+    }
+    jump.chain(jump_land);
+
+    // --- STANDING ATTACKS ---
+    var p1 = player.addAnimation(POSE_FLAGS.STANDING | POSE_FLAGS.CROUCHING | POSE_FLAGS.WALKING_FORWARD | POSE_FLAGS.WALKING_BACKWARD | POSE_FLAGS.ALLOW_INTERUPT_1, "light punch", 5, [BUTTONS.LIGHT_PUNCH]);
+    p1.ButtonSequence.push([{ Button: BUTTONS.LIGHT_PUNCH, State: BUTTON_STATE.PRESSED, MaxNbFrames: CONSTANTS.ATTACKBUTTON_FRAMES }]);
+    p1.ButtonCount = 1; p1.Flags = { Pose: POSE_FLAGS.STANDING };
+    p1.OverrideFlags = new MoveOverrideFlags(OVERRIDE_FLAGS.STANDING, OVERRIDE_FLAGS.HPROJECTILE);
+    p1.addFrame(player, 0, "", f("p1", 0), 2, MISC_FLAGS.NONE, { Player: PLAYER_FLAGS.MOBILE });
+    p1.addFrame(player, 0, "", f("p1", 1), 3, { SwingSound: SWINGSOUND.LP, Combat: COMBAT_FLAGS.ATTACK, Pose: POSE_FLAGS.ALLOW_INTERUPT_1, HitSound: HITSOUND.LP }, MISC_FLAGS.NONE, 0, 0, 0, 10, null, 0, 0, ATTACK_FLAGS.LIGHT, [{ state: HIT_FLAGS.LOW, x: 110, y: 193 }, { state: HIT_FLAGS.HIGH, x: 194, y: 193 }], ATTACK_FLAGS.LIGHT, 1, 0, 10);
+    p1.endBlock();
+    p1.addFrame(player, 0, "", f("p1", 0), 3);
+
+    // --- CROUCH ATTACKS ---
+    var crouch_k3 = player.addAnimation(POSE_FLAGS.CROUCHING | POSE_FLAGS.STANDING | POSE_FLAGS.ALLOW_INTERUPT_1, "crouch k3", 5, [BUTTONS.CROUCH | BUTTONS.HARD_KICK], 110);
+    crouch_k3.ButtonSequence.push([{ Button: BUTTONS.CROUCH, State: BUTTON_STATE.PRESSED }, { Button: BUTTONS.HARD_KICK, State: BUTTON_STATE.PRESSED, MaxNbFrames: CONSTANTS.ATTACKBUTTON_FRAMES }]);
+    crouch_k3.ButtonCount = 2; crouch_k3.setHardAttack();
+    crouch_k3.Flags = ({ Pose: POSE_FLAGS.CROUCHING });
+    crouch_k3.OverrideFlags = new MoveOverrideFlags(OVERRIDE_FLAGS.CROUCHING, OVERRIDE_FLAGS.STANDING);
+    crouch_k3.addFrame(player, 0, "", f("c-k3", 0), 3, MISC_FLAGS.NONE, { Player: PLAYER_FLAGS.MOBILE });
+    crouch_k3.addFrame(player, 0, "232", f("c-k3", 1), 5, { SwingSound: SWINGSOUND.HP, Combat: COMBAT_FLAGS.ATTACK, Pose: POSE_FLAGS.ALLOW_INTERUPT_1, HitSound: HITSOUND.HK }, MISC_FLAGS.NONE, 0, 0, 0, 10, null, 0, 0, ATTACK_FLAGS.HARD | ATTACK_FLAGS.HITS_LOW | ATTACK_FLAGS.TRIP, [{ state: HIT_FLAGS.LOW, x: 160, y: 35 }, { state: HIT_FLAGS.HIGH, x: 250, y: 35 }], ATTACK_FLAGS.HARD, 1, 0, 20, 0, CONSTANTS.TRIP_SLIDEFACTOR);
+    crouch_k3.endBlock();
+    crouch_k3.addFrame(player, 0, "", f("c-k3", 2), 4);
+    crouch_k3.chain(crouch, 2);
+
+    player.sortAnimations();
+    return player;
+};
+
+window.create${cap} = create${cap};
+window.create${char.toLowerCase()} = create${cap};
+`;
+}
+
+function downloadExportFile() {
+  const char = document.getElementById("charName").value.trim().toLowerCase() || "ken";
+  const filename = (activeExportTab === 1) ? `player-${char}-spritedata.js` : `player-${char}.js`;
+  const text = document.getElementById("txtExportCode").value;
+  const blob = new Blob([text], { type: "text/javascript" });
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = filename;
+  a.click();
+}
+
+function copyExportCode() {
+  const codeBox = document.getElementById("txtExportCode");
+  codeBox.select();
+  document.execCommand("copy");
+  alert("Code copied to clipboard!");
+}
+</script>
+</body>
+</html>
