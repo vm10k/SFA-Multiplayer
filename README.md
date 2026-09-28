@@ -31,8 +31,8 @@ This project aims to recreate the high-intensity gameplay of classic fighting ti
 * **Team Survival (3v3)**: An endurance-based mode where teams of three compete for dominance.
 
 ## Features
-* 6 Characters
-<img width="1280" height="279" alt="image" src="https://github.com/user-attachments/assets/c7b7e856-8049-4621-95c9-fd0869e7f52c" />
+* 7 Characters
+<img width="1280" height="537" alt="image" src="https://github.com/user-attachments/assets/22577e90-a924-436d-896f-118727d9c62a" />
 
 * 9 Arenas
 <img width="1142" height="673" alt="image" src="https://github.com/user-attachments/assets/9fc34264-6291-43c1-9821-5b41facae497" />
