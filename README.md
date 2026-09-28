@@ -84,6 +84,10 @@ Once these three items are ready, submit a Pull Request. and we will handle the 
 
 Visit: https://vm10k.github.io/SFA-Multiplayer/
 
+Pick an editor either for FIGHTERS or HEROS
+
+<img width="1280" height="873" alt="image" src="https://github.com/user-attachments/assets/e81730b1-298c-43eb-b236-59627ca57097" />
+
 ### 1. upload your spritesheet "png"
 <img width="1280" height="889" alt="image" src="https://github.com/user-attachments/assets/83ca7813-3b1a-4678-93a0-6dfab11a0e16" />
 
@@ -100,6 +104,10 @@ Visit: https://vm10k.github.io/SFA-Multiplayer/
 it requires more job to do so. so you have to use ai that designs a projectitles for example a laser and tell ai to add it up to your character files the data and sprite data and keep on refine it to get it right.
 Thats all!
 
+The same steps goes for the fighters too
 
+<img width="1280" height="895" alt="image" src="https://github.com/user-attachments/assets/cb7df83b-1e1f-489b-bd28-2e63cb2abb8b" />
+
+That's all thanks for reading!
 
 Copyright 2026 Fan Project. Server Alpha v1.0. All trademarks belong to their respective owners.
