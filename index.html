@@ -3,10 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Street Fighter Alpha - Studio Workspace Selector</title>
+    <title>Street Fighter Alpha - Multiplayer</title>
     <link rel="icon" type="image/png" href="favicon.ico">
 
-    <!-- GOOGLE FONTS IDENTICAL TO MAIN SITE -->
+    <meta name="description" content="Street Fighter Alpha - Studio Workspace Selector. Choose your character editor and arena studio.">
+
+    <!-- GOOGLE FONTS -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Roboto+Condensed:ital,wght@0,400;0,700;1,900&display=swap" rel="stylesheet">
@@ -16,17 +18,18 @@
         :root {
             --sf-black: #050505;
             --sf-dark-grey: #111111;
-            --sf-card-bg: #161822;
+            --sf-card-bg: #141622;
             --sf-red: #ff0000;
             --sf-dark-red: #9e0000;
             --sf-orange: #ff7300;
             --sf-blue: #0088ff;
+            --sf-dark-blue: #0055aa;
             --sf-discord: #5865F2;
             --sf-highlight: #2ed573;
             --sf-gold: #ffa502;
             --text-main: #ffffff;
             --text-muted: #aaaaaa;
-            --border-color: #2a3148;
+            --border-color: #24293d;
         }
 
         /* --- GLOBAL RESET --- */
@@ -117,14 +120,14 @@
             text-shadow: 0 0 15px var(--sf-red), 0 0 5px var(--sf-orange);
             display: flex;
             align-items: center;
-            gap: 10px;
+            gap: 12px;
         }
 
         .logo-badge {
             background: rgba(255, 115, 0, 0.15);
             border: 1px solid var(--sf-orange);
             color: var(--sf-orange);
-            font-size: 0.9rem;
+            font-size: 0.85rem;
             padding: 2px 8px;
             border-radius: 4px;
             letter-spacing: 1px;
@@ -153,40 +156,39 @@
             text-shadow: 0 0 15px var(--sf-orange);
         }
 
-        /* --- HUB MAIN HERO CONTAINER --- */
+        /* --- WORKSPACE HUB HERO CONTAINER --- */
         .hub-container {
             flex: 1;
             display: flex;
             flex-direction: column;
             justify-content: center;
             align-items: center;
-            padding: 2rem 2rem 4rem 2rem;
+            padding: 1.5rem 2rem 4rem 2rem;
             position: relative;
             z-index: 10;
             text-align: center;
-            max-width: 1300px;
+            max-width: 1250px;
             margin: 0 auto;
             width: 100%;
         }
 
         .main-heading {
-            font-size: 4rem;
+            font-size: 3.8rem;
             line-height: 1;
-            margin-bottom: 0.5rem;
+            margin-bottom: 0.4rem;
             background: linear-gradient(var(--text-main), var(--sf-orange));
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
-            text-shadow: 3px 3px 0px rgba(0,0,0,0.8), 0 0 30px rgba(255,115,0,0.4);
+            text-shadow: 3px 3px 0px rgba(0,0,0,0.9), 0 0 30px rgba(255,115,0,0.4);
             animation: dropIn 0.7s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
         }
 
         .sub-tagline {
-            font-size: 1.4rem;
+            font-size: 1.3rem;
             color: var(--text-muted);
             letter-spacing: 3px;
-            margin-bottom: 3.5rem;
+            margin-bottom: 3rem;
             text-transform: uppercase;
-            text-shadow: 0 0 10px rgba(0,0,0,0.8);
         }
 
         .sub-tagline span {
@@ -194,20 +196,20 @@
             font-weight: bold;
         }
 
-        /* --- STUDIO SELECTION CARDS GRID --- */
+        /* --- STUDIOS SELECTION GRID --- */
         .studios-grid {
             display: grid;
             grid-template-columns: repeat(2, 1fr);
             gap: 3rem;
             width: 100%;
-            max-width: 1100px;
+            max-width: 1050px;
         }
 
         .studio-card {
-            background: linear-gradient(145deg, #13151f 0%, #0c0e15 100%);
+            background: linear-gradient(145deg, #13151f 0%, #0a0b12 100%);
             border: 2px solid var(--border-color);
-            border-radius: 12px;
-            padding: 3rem 2.2rem;
+            border-radius: 8px;
+            padding: 2.2rem 2rem;
             text-decoration: none;
             color: #fff;
             display: flex;
@@ -217,7 +219,7 @@
             position: relative;
             overflow: hidden;
             box-shadow: 0 15px 35px rgba(0,0,0,0.8), inset 0 0 25px rgba(0,0,0,0.7);
-            transition: all 0.35s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
             cursor: pointer;
         }
 
@@ -226,7 +228,7 @@
             position: absolute;
             top: 0; left: -100%;
             width: 60%; height: 100%;
-            background: linear-gradient(to right, transparent, rgba(255,255,255,0.1), transparent);
+            background: linear-gradient(to right, transparent, rgba(255,255,255,0.08), transparent);
             transform: skewX(-25deg);
             transition: 0.6s;
         }
@@ -237,20 +239,20 @@
 
         /* CARD 1: FIGHTER STUDIO (RED / ORANGE THEME) */
         .card-fighter {
-            border-color: rgba(255, 71, 87, 0.4);
+            border-color: rgba(255, 71, 87, 0.35);
         }
         .card-fighter:hover {
-            transform: translateY(-12px) scale(1.02);
+            transform: translateY(-10px) scale(1.02);
             border-color: var(--sf-red);
             box-shadow: 0 20px 45px rgba(255, 0, 0, 0.35), inset 0 0 30px rgba(255,0,0,0.2);
         }
 
-        /* CARD 2: HERO STUDIO (BLUE / GOLD THEME) */
+        /* CARD 2: HERO STUDIO (BLUE / CYAN THEME) */
         .card-hero {
-            border-color: rgba(0, 136, 255, 0.4);
+            border-color: rgba(0, 136, 255, 0.35);
         }
         .card-hero:hover {
-            transform: translateY(-12px) scale(1.02);
+            transform: translateY(-10px) scale(1.02);
             border-color: var(--sf-blue);
             box-shadow: 0 20px 45px rgba(0, 136, 255, 0.35), inset 0 0 30px rgba(0,136,255,0.2);
         }
@@ -259,9 +261,9 @@
             font-family: 'Bebas Neue', sans-serif;
             font-size: 1rem;
             padding: 4px 14px;
-            border-radius: 20px;
+            border-radius: 4px;
             letter-spacing: 2px;
-            margin-bottom: 1.5rem;
+            margin-bottom: 1.4rem;
             text-transform: uppercase;
         }
 
@@ -279,22 +281,51 @@
             text-shadow: 0 0 10px var(--sf-blue);
         }
 
-        .card-icon {
-            font-size: 4.5rem;
-            margin-bottom: 1rem;
-            filter: drop-shadow(0 5px 15px rgba(0,0,0,0.9));
-            transition: transform 0.3s ease;
+        /* --- CHARACTER PORTRAIT FRAME (EXACT ROSTER CARD STYLE) --- */
+        .portrait-frame {
+            width: 170px;
+            height: 220px;
+            background: repeating-linear-gradient(45deg, #111, #111 10px, #222 10px, #222 20px);
+            border: 2px solid #333;
+            border-radius: 6px;
+            overflow: hidden;
+            position: relative;
+            margin-bottom: 1.4rem;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.9), inset 0 0 15px rgba(0,0,0,0.8);
+            transition: all 0.3s ease;
         }
 
-        .studio-card:hover .card-icon {
-            transform: scale(1.15);
+        .portrait-img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            filter: grayscale(40%);
+            transition: all 0.3s ease;
+        }
+
+        .studio-card:hover .portrait-frame {
+            transform: scale(1.05);
+        }
+
+        .card-fighter:hover .portrait-frame {
+            border-color: var(--sf-orange);
+            box-shadow: 0 10px 25px rgba(255, 115, 0, 0.4), inset 0 0 15px rgba(255,0,0,0.5);
+        }
+
+        .card-hero:hover .portrait-frame {
+            border-color: var(--sf-blue);
+            box-shadow: 0 10px 25px rgba(0, 136, 255, 0.4), inset 0 0 15px rgba(0,136,255,0.5);
+        }
+
+        .studio-card:hover .portrait-img {
+            filter: grayscale(0%);
+            transform: scale(1.06);
         }
 
         .card-title {
             font-size: 2.8rem;
-            margin-bottom: 0.8rem;
+            margin-bottom: 0.6rem;
             letter-spacing: 2px;
-            text-shadow: 2px 2px 0px rgba(0,0,0,1);
         }
 
         .card-fighter .card-title {
@@ -308,50 +339,57 @@
         }
 
         .card-desc {
-            font-size: 1.1rem;
+            font-size: 1.05rem;
             color: var(--text-muted);
             line-height: 1.5;
-            margin-bottom: 2rem;
-            max-width: 420px;
+            margin-bottom: 1.8rem;
+            max-width: 380px;
         }
 
-        /* FEATURE PILLS INSIDE CARD */
+        /* --- BULLET ITEMS (CLEAN METALLIC MARKERS, ZERO EMOJIS) --- */
         .feature-bullets {
             display: flex;
             flex-direction: column;
             gap: 8px;
             width: 100%;
-            margin-bottom: 2.5rem;
+            margin-bottom: 2.2rem;
             text-align: left;
         }
 
         .bullet-item {
             display: flex;
             align-items: center;
-            gap: 10px;
+            gap: 12px;
             font-size: 0.95rem;
             color: #d1d5db;
-            background: rgba(0,0,0,0.45);
+            background: rgba(0, 0, 0, 0.5);
             padding: 8px 14px;
-            border-radius: 6px;
+            border-radius: 4px;
             border-left: 3px solid #333;
         }
 
         .card-fighter .bullet-item { border-left-color: var(--sf-red); }
         .card-hero .bullet-item { border-left-color: var(--sf-blue); }
 
-        .bullet-item span.icon {
-            font-size: 1.1rem;
+        .bullet-indicator {
+            width: 6px;
+            height: 6px;
+            border-radius: 1px;
+            flex-shrink: 0;
+            transform: rotate(45deg);
         }
 
-        /* BUTTONS (MATCHING SFA STYLE) */
+        .card-fighter .bullet-indicator { background: var(--sf-orange); box-shadow: 0 0 6px var(--sf-red); }
+        .card-hero .bullet-indicator { background: var(--sf-blue); box-shadow: 0 0 6px var(--sf-blue); }
+
+        /* --- BUTTONS --- */
         .btn {
             position: relative;
             display: inline-flex;
             align-items: center;
             justify-content: center;
             gap: 10px;
-            padding: 1rem 2.5rem;
+            padding: 1rem 2.2rem;
             font-size: 1.9rem;
             color: #fff;
             text-decoration: none;
@@ -402,7 +440,7 @@
             border: 1px solid #444;
             color: var(--sf-gold);
             padding: 2px 7px;
-            border-radius: 4px;
+            border-radius: 3px;
             font-family: monospace;
             font-weight: bold;
         }
@@ -437,10 +475,11 @@
         /* --- RESPONSIVE BREAKPOINTS --- */
         @media (max-width: 900px) {
             .studios-grid { grid-template-columns: 1fr; gap: 2rem; }
-            .main-heading { font-size: 3rem; }
+            .main-heading { font-size: 2.8rem; }
             .sub-tagline { font-size: 1.1rem; margin-bottom: 2rem; }
             nav { padding: 1.2rem; }
             .studio-card { padding: 2rem 1.5rem; }
+            .portrait-frame { width: 150px; height: 195px; }
         }
     </style>
 </head>
@@ -458,8 +497,8 @@
     <!-- NAVIGATION BAR -->
     <nav>
         <a href="index.html" class="logo-text">
-            <span>SFA: STUDIO HUB</span>
-            <span class="logo-badge">WORKSPACE SELECTOR</span>
+            <span>SFA: MULTIPLAYER</span>
+            <span class="logo-badge">WORKSPACE HUB</span>
         </a>
 
         <ul class="nav-links">
@@ -472,72 +511,82 @@
     <!-- MAIN STUDIO SELECTOR SECTION -->
     <main class="hub-container">
         <h1 class="main-heading">CHOOSE YOUR WORKSPACE</h1>
-        <p class="sub-tagline">ARCADE ENGINE <span>&bull;</span> SPRITE SLICER <span>&bull;</span> 100% JS EXPORTER</p>
+        <p class="sub-tagline">ARCADE ENGINE <span>/</span> SPRITE SLICER <span>/</span> CODE EXPORTER</p>
 
         <div class="studios-grid">
 
-            <!-- OPTION 1: FIGHTER STUDIO (CAPCOM ARCADE STANDARD) -->
+            <!-- OPTION 1: FIGHTER STUDIO (CLASSIC CAPCOM STANDARD) -->
             <a href="fighterstudio.html" class="studio-card card-fighter" id="link-fighter">
                 <div class="card-badge badge-fighter">CLASSIC CAPCOM ENGINE</div>
-                <div class="card-icon">🥋</div>
+
+                <!-- CHARACTER IMAGE (RYU / CAPCOM FIGHTER) -->
+                <div class="portrait-frame">
+                    <img src="nc_ryu.png" alt="Ryu" class="portrait-img">
+                </div>
+
                 <h2 class="card-title">FIGHTER STUDIO</h2>
                 <p class="card-desc">
-                    Tuned for traditional Street Fighter Alpha roster (Ken, Ryu, Chun-Li, Guy, Birdie, Vega). Features smart dual-chroma keying and 6-button classic inputs.
+                    Tuned for traditional Street Fighter Alpha characters (Ryu, Ken, Chun-Li, Guy, Birdie, Vega). Features smart dual-chroma keying and 6-button classic inputs.
                 </p>
 
                 <div class="feature-bullets">
                     <div class="bullet-item">
-                        <span class="icon">🔍</span>
-                        <span>Auto-detects Magenta (#FF00FF) + Black arcade cells</span>
+                        <span class="bullet-indicator"></span>
+                        <span>Auto-detects Magenta (#FF00FF) and black cell margins</span>
                     </div>
                     <div class="bullet-item">
-                        <span class="icon">⚡</span>
-                        <span>1:1 Street Fighter physics, baselines &amp; frame hitboxes</span>
+                        <span class="bullet-indicator"></span>
+                        <span>1:1 Street Fighter physics, baselines, and frame hitboxes</span>
                     </div>
                     <div class="bullet-item">
-                        <span class="icon">🔥</span>
-                        <span>Hadoken, Shoryuken &amp; Tatsumaki moveset mapping</span>
+                        <span class="bullet-indicator"></span>
+                        <span>Hadoken, Shoryuken, and Tatsumaki moveset mapping</span>
                     </div>
                     <div class="bullet-item">
-                        <span class="icon">💾</span>
-                        <span>Exports clean <code style="color:var(--sf-gold);">player-[char].js</code> &amp; <code style="color:var(--sf-gold);">spritedata.js</code></span>
+                        <span class="bullet-indicator"></span>
+                        <span>Exports engine-ready player-[char].js and spritedata.js</span>
                     </div>
                 </div>
 
-                <div class="btn btn-fighter">ENTER FIGHTER STUDIO &rarr;</div>
-                <div class="kbd-hint">Press <kbd>1</kbd> or <kbd>F</kbd> to launch</div>
+                <div class="btn btn-fighter">LAUNCH FIGHTER STUDIO</div>
+                <div class="kbd-hint">PRESS <kbd>1</kbd> OR <kbd>F</kbd> TO OPEN</div>
             </a>
 
-            <!-- OPTION 2: HERO STUDIO (CUSTOM & BOSS SCALED CHARACTERS) -->
+            <!-- OPTION 2: HERO STUDIO (HOMELANDER / CUSTOM HEROES) -->
             <a href="herostudio.html" class="studio-card card-hero" id="link-hero">
                 <div class="card-badge badge-hero">CUSTOM / HERO ENGINE</div>
-                <div class="card-icon">⚡</div>
+
+                <!-- CHARACTER IMAGE (HOMELANDER / CUSTOM HERO) -->
+                <div class="portrait-frame">
+                    <img src="nc_homelander.png" alt="Homelander" class="portrait-img">
+                </div>
+
                 <h2 class="card-title">HERO STUDIO</h2>
                 <p class="card-desc">
-                    Tuned for custom heroes, guest characters, and scaled fighters (Homelander, Wesker, Bosses). Features projectile beams and dynamic scale multipliers.
+                    Tuned for custom heroes, boss characters, and scaled fighters (Homelander, Wesker). Features projectile beams, laser specials, and dynamic scale multipliers.
                 </p>
 
                 <div class="feature-bullets">
                     <div class="bullet-item">
-                        <span class="icon">📐</span>
+                        <span class="bullet-indicator"></span>
                         <span>Dynamic height scale multiplier (1.0x to 3.5x vs Sagat)</span>
                     </div>
                     <div class="bullet-item">
-                        <span class="icon">🔴</span>
-                        <span>Special heat vision, projectile beams &amp; full-screen lasers</span>
+                        <span class="bullet-indicator"></span>
+                        <span>Special heat vision, projectile beams, and full-screen lasers</span>
                     </div>
                     <div class="bullet-item">
-                        <span class="icon">🛡️</span>
-                        <span>Proportional custom hurtbox &amp; strike hitbox scaling</span>
+                        <span class="bullet-indicator"></span>
+                        <span>Proportional custom hurtbox and strike hitbox scaling</span>
                     </div>
                     <div class="bullet-item">
-                        <span class="icon">⚙️</span>
-                        <span>Reverse-imports custom JS setups &amp; projectile data</span>
+                        <span class="bullet-indicator"></span>
+                        <span>Reverse-imports custom JS setups and projectile data</span>
                     </div>
                 </div>
 
-                <div class="btn btn-hero">ENTER HERO STUDIO &rarr;</div>
-                <div class="kbd-hint">Press <kbd>2</kbd> or <kbd>H</kbd> to launch</div>
+                <div class="btn btn-hero">LAUNCH HERO STUDIO</div>
+                <div class="kbd-hint">PRESS <kbd>2</kbd> OR <kbd>H</kbd> TO OPEN</div>
             </a>
 
         </div>
@@ -545,10 +594,10 @@
 
     <!-- FOOTER -->
     <footer>
-        <p>&copy; 2026 Street Fighter Alpha Fan Project. Built for browser arcade modders. <a href="index.html">&larr; Return to Main Menu</a></p>
+        <p>&copy; 2026 Street Fighter Alpha Fan Project. Built for browser arcade modders. <a href="index.html">Return to Main Menu</a></p>
     </footer>
 
-    <!-- KEYBOARD LAUNCHER SCRIPT -->
+    <!-- KEYBOARD SHORTCUTS -->
     <script>
         window.addEventListener('keydown', function(e) {
             const key = e.key.toUpperCase();
