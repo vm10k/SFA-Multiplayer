@@ -104,7 +104,7 @@ Pick an editor either for FIGHTERS or HEROS
 it requires more job to do so. so you have to use ai that designs a projectitles for example a laser and tell ai to add it up to your character files the data and sprite data and keep on refine it to get it right.
 Thats all!
 
-The same steps goes for the fighters too
+### The same steps goes for the fighters too
 
 <img width="1280" height="895" alt="image" src="https://github.com/user-attachments/assets/cb7df83b-1e1f-489b-bd28-2e63cb2abb8b" />
 
