@@ -472,15 +472,438 @@
             100% { transform: translateY(-100vh) scale(0); opacity: 0; }
         }
 
-        /* --- RESPONSIVE BREAKPOINTS --- */
-        @media (max-width: 900px) {
-            .studios-grid { grid-template-columns: 1fr; gap: 2rem; }
-            .main-heading { font-size: 2.8rem; }
-            .sub-tagline { font-size: 1.1rem; margin-bottom: 2rem; }
-            nav { padding: 1.2rem; }
-            .studio-card { padding: 2rem 1.5rem; }
-            .portrait-frame { width: 150px; height: 195px; }
+        /* --- RESPONSIVE SYSTEM --- */
+
+/* Prevent oversized desktop spacing from becoming a problem on short screens. */
+html {
+    min-width: 320px;
+    scroll-behavior: smooth;
+}
+
+body {
+    min-height: 100svh;
+}
+
+nav,
+.hub-container,
+footer {
+    width: 100%;
+}
+
+/* Large / ultra-wide displays */
+@media (min-width: 1400px) {
+    nav {
+        padding-left: clamp(2rem, 4vw, 4rem);
+        padding-right: clamp(2rem, 4vw, 4rem);
+    }
+
+    .hub-container {
+        max-width: 1350px;
+        padding-top: clamp(2rem, 4vh, 4rem);
+    }
+
+    .studios-grid {
+        max-width: 1150px;
+        gap: clamp(2rem, 3vw, 3.5rem);
+    }
+
+    .studio-card {
+        padding: clamp(2rem, 2.5vw, 2.8rem);
+    }
+}
+
+/* Tablet / small laptops */
+@media (max-width: 1100px) {
+    nav {
+        padding: 1.25rem 1.5rem;
+    }
+
+    .nav-links {
+        gap: 1.1rem;
+    }
+
+    .nav-links a {
+        font-size: 1.05rem;
+    }
+
+    .hub-container {
+        padding: 1.5rem 1.25rem 3rem;
+    }
+
+    .studios-grid {
+        max-width: 950px;
+        gap: 1.5rem;
+    }
+
+    .studio-card {
+        padding: 1.8rem 1.35rem;
+    }
+
+    .portrait-frame {
+        width: 145px;
+        height: 188px;
+    }
+
+    .card-title {
+        font-size: clamp(2.2rem, 4vw, 2.7rem);
+    }
+
+    .card-desc {
+        font-size: 1rem;
+    }
+}
+
+/* Phones + portrait tablets */
+@media (max-width: 900px) {
+    nav {
+        align-items: flex-start;
+        gap: 1rem;
+        padding: 1rem;
+    }
+
+    .logo-text {
+        flex-wrap: wrap;
+        gap: 6px 8px;
+        font-size: clamp(1.45rem, 5vw, 2rem);
+        line-height: 1;
+    }
+
+    .logo-badge {
+        font-size: 0.7rem;
+        padding: 2px 6px;
+    }
+
+    .nav-links {
+        flex-wrap: wrap;
+        justify-content: flex-end;
+        gap: 0.5rem 0.8rem;
+    }
+
+    .nav-links a {
+        font-size: 0.95rem;
+        letter-spacing: 1px;
+    }
+
+    .hub-container {
+        justify-content: flex-start;
+        padding: clamp(1rem, 4vw, 2rem) 1rem 2.5rem;
+    }
+
+    .main-heading {
+        width: 100%;
+        font-size: clamp(2.4rem, 8vw, 3.5rem);
+        line-height: 0.95;
+        margin-bottom: 0.6rem;
+    }
+
+    .sub-tagline {
+        width: 100%;
+        font-size: clamp(0.85rem, 3vw, 1.1rem);
+        line-height: 1.4;
+        letter-spacing: clamp(1px, 0.5vw, 2.5px);
+        margin-bottom: 1.5rem;
+    }
+
+    .studios-grid {
+        grid-template-columns: 1fr;
+        width: min(100%, 620px);
+        gap: 1rem;
+    }
+
+    .studio-card {
+        width: 100%;
+        padding: 1.35rem 1rem;
+        border-width: 1px;
+    }
+
+    .card-badge {
+        font-size: 0.82rem;
+        margin-bottom: 0.9rem;
+        padding: 4px 10px;
+    }
+
+    .portrait-frame {
+        width: clamp(115px, 34vw, 150px);
+        height: clamp(150px, 44vw, 195px);
+        margin-bottom: 1rem;
+    }
+
+    .card-title {
+        font-size: clamp(2rem, 9vw, 2.7rem);
+        line-height: 1;
+        margin-bottom: 0.5rem;
+    }
+
+    .card-desc {
+        width: 100%;
+        max-width: 520px;
+        font-size: clamp(0.9rem, 3.5vw, 1.05rem);
+        line-height: 1.45;
+        margin-bottom: 1rem;
+    }
+
+    .feature-bullets {
+        gap: 6px;
+        margin-bottom: 1.2rem;
+    }
+
+    .bullet-item {
+        min-height: 42px;
+        gap: 10px;
+        padding: 8px 10px;
+        font-size: clamp(0.82rem, 3vw, 0.95rem);
+        line-height: 1.3;
+    }
+
+    .btn {
+        min-height: 52px;
+        padding: 0.75rem 1rem;
+        font-size: clamp(1.35rem, 6vw, 1.8rem);
+        max-width: 100%;
+    }
+
+    .kbd-hint {
+        margin-top: 10px;
+        font-size: 0.9rem;
+    }
+
+    footer {
+        padding: 1.25rem 1rem;
+        font-size: 0.8rem;
+        line-height: 1.45;
+    }
+
+    /* Hover effects should not enlarge cards on touch devices. */
+    .studio-card:hover {
+        transform: none;
+    }
+
+    .studio-card:hover .portrait-frame,
+    .studio-card:hover .portrait-img,
+    .studio-card:hover .btn {
+        transform: none;
+    }
+}
+
+/* Normal phones */
+@media (max-width: 600px) {
+    nav {
+        display: flex;
+        flex-direction: column;
+        align-items: stretch;
+        text-align: center;
+        padding: 0.85rem 0.75rem 0.6rem;
+        background: linear-gradient(to bottom, rgba(0,0,0,0.98), rgba(0,0,0,0.72));
+    }
+
+    .logo-text {
+        justify-content: center;
+        font-size: clamp(1.35rem, 7vw, 1.75rem);
+    }
+
+    .logo-badge {
+        font-size: 0.65rem;
+    }
+
+    .nav-links {
+        width: 100%;
+        justify-content: center;
+        gap: 0.35rem 0.75rem;
+    }
+
+    .nav-links a {
+        font-size: 0.78rem;
+        letter-spacing: 0.7px;
+        padding: 0.25rem 0;
+    }
+
+    .hub-container {
+        padding: 1rem 0.7rem 2rem;
+    }
+
+    .main-heading {
+        font-size: clamp(2.05rem, 11vw, 3rem);
+    }
+
+    .sub-tagline {
+        font-size: 0.76rem;
+        margin-bottom: 1rem;
+    }
+
+    .studios-grid {
+        gap: 0.8rem;
+    }
+
+    .studio-card {
+        padding: 1rem 0.8rem;
+        border-radius: 7px;
+    }
+
+    .card-badge {
+        max-width: 100%;
+        font-size: 0.7rem;
+        letter-spacing: 1.2px;
+    }
+
+    .portrait-frame {
+        width: 110px;
+        height: 145px;
+    }
+
+    .card-title {
+        font-size: clamp(1.85rem, 10vw, 2.4rem);
+    }
+
+    .card-desc {
+        font-size: 0.86rem;
+    }
+
+    .bullet-item {
+        font-size: 0.78rem;
+        padding: 7px 8px;
+    }
+
+    .btn {
+        min-height: 50px;
+        font-size: 1.35rem;
+        border-width: 2px;
+    }
+
+    .kbd-hint {
+        font-size: 0.78rem;
+    }
+
+    footer {
+        font-size: 0.72rem;
+        padding: 1rem 0.7rem;
+    }
+}
+
+/* Very small phones */
+@media (max-width: 380px) {
+    .nav-links {
+        gap: 0.25rem 0.55rem;
+    }
+
+    .nav-links a {
+        font-size: 0.7rem;
+    }
+
+    .main-heading {
+        font-size: 2rem;
+    }
+
+    .sub-tagline {
+        font-size: 0.68rem;
+        letter-spacing: 0.5px;
+    }
+
+    .portrait-frame {
+        width: 100px;
+        height: 132px;
+    }
+
+    .studio-card {
+        padding: 0.85rem 0.65rem;
+    }
+
+    .bullet-item {
+        font-size: 0.73rem;
+    }
+
+    .btn {
+        font-size: 1.2rem;
+    }
+}
+
+/* Landscape phones: use the available width without creating giant vertical gaps. */
+@media (max-height: 600px) and (orientation: landscape) {
+    nav {
+        padding-top: 0.55rem;
+        padding-bottom: 0.45rem;
+    }
+
+    .hub-container {
+        padding-top: 0.75rem;
+        padding-bottom: 1.5rem;
+    }
+
+    .main-heading {
+        font-size: clamp(2rem, 7vw, 3rem);
+    }
+
+    .sub-tagline {
+        margin-bottom: 0.8rem;
+    }
+
+    .studios-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        max-width: 900px;
+    }
+
+    .studio-card {
+        padding: 1rem;
+    }
+
+    .portrait-frame {
+        width: 95px;
+        height: 125px;
+    }
+
+    .feature-bullets {
+        margin-bottom: 0.9rem;
+    }
+
+    .bullet-item {
+        padding: 6px 8px;
+    }
+
+    .kbd-hint {
+        margin-top: 7px;
+    }
+
+    footer {
+        padding: 0.8rem;
+    }
+}
+
+/* Accessibility / devices with reduced motion */
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
+    }
+}
+
+/* Prevent accidental horizontal overflow caused by long text/links. */
+@media (max-width: 900px) {
+    .logo-text,
+    .nav-links,
+    .card-desc,
+    .bullet-item,
+    footer {
+        overflow-wrap: anywhere;
+        word-break: normal;
+    }
+}
+        .studio-card:focus-visible,
+        .nav-links a:focus-visible,
+        .logo-text:focus-visible,
+        footer a:focus-visible {
+            outline: 2px solid var(--sf-orange);
+            outline-offset: 4px;
         }
+
+        @media (max-width: 900px) {
+            .studio-card:active {
+                transform: scale(0.99);
+            }
+        }
+
     </style>
 </head>
 <body>
