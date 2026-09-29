@@ -157,6 +157,36 @@
     border-radius: 6px; padding: 10px; font-family: monospace; font-size: 0.74rem;
     white-space: pre; overflow: auto;
   }
+  /* Mobile Device Blocker / Warning Overlay */
+#mobile-warning {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(8, 9, 13, 0.98);
+  z-index: 99999;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 24px;
+  gap: 12px;
+}
+#mobile-warning h2 {
+  color: var(--accent, #ff4757);
+  font-size: 1.15rem;
+  letter-spacing: 1px;
+}
+#mobile-warning p {
+  color: var(--text-muted, #8890a4);
+  font-size: 0.82rem;
+  max-width: 320px;
+  line-height: 1.5;
+}
+
+/* Triggered on phones & narrow screens (< 900px) */
+@media (max-width: 900px) {
+  #mobile-warning { display: flex; }
+}
 </style>
 </head>
 <body>
@@ -1798,4 +1828,13 @@ function copyExportCode() {
 }
 </script>
 </body>
+<!-- Mobile Notice Overlay -->
+<div id="mobile-warning">
+  <div style="font-size: 2.6rem;">🖥️</div>
+  <h2>DESKTOP REQUIRED</h2>
+  <p>This editor and interactive arena is not available on mobile devices. Please switch to a desktop or laptop browser to continue.</p>
+  <button class="btn btn-sec" style="margin-top: 6px;" onclick="document.getElementById('mobile-warning').style.display='none'">
+    Dismiss & Preview Anyway
+  </button>
+</div>
 </html>
