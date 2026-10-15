@@ -110,4 +110,5 @@ Thats all!
 
 That's all thanks for reading!
 
+Credits: https://github.com/gamedev8/js-sfa/ - gamedev8  / vm10k
 Copyright 2026 Fan Project. Server Alpha v1.0. All trademarks belong to their respective owners.
