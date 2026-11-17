@@ -477,7 +477,119 @@ updateLocalControlsMap();
             filter: drop-shadow(0 10px 15px rgba(0,0,0,1)); z-index: 10;
             opacity: 0; animation: dropIn 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
         }
+  /* --- STREET FIGHTER ARCADE DONATE BUTTON --- */
+        .btn-donate-arcade {
+            width: 100% !important;
+            margin-top: 8px !important;
+            padding: 7px 0 !important;
+            font-family: 'Bebas Neue', 'Impact', sans-serif !important;
+            font-size: 15px !important;
+            letter-spacing: 1px !important;
+            color: #fff !important;
+            background: linear-gradient(90deg, var(--sf-dark-red), var(--sf-red)) !important;
+            border: 2px solid #fff !important;
+            border-radius: 3px !important;
+            box-shadow: 0 0 10px rgba(255, 0, 0, 0.5) !important;
+            cursor: pointer;
+            box-sizing: border-box !important;
+            text-shadow: 1px 1px 0 #000 !important;
+            white-space: nowrap !important;
+            transition: all 0.2s ease !important;
+        }
 
+        .btn-donate-arcade:hover {
+            background: linear-gradient(90deg, var(--sf-red), var(--sf-orange)) !important;
+            border-color: var(--sf-orange) !important;
+            box-shadow: 0 0 15px var(--sf-orange) !important;
+            transform: scale(1.02);
+        }
+
+        .btn-donate-arcade:active {
+            transform: scale(0.98);
+        }
+
+     @media (max-width: 900px), (max-height: 500px) {
+            .leaderboard-lnk {
+                font-size: 8px !important;
+                gap: 3px !important;
+                display: inline-flex !important;
+                margin-bottom: 6px !important;
+            }
+
+            .btn-donate-arcade {
+                margin-top: 8px !important;   
+                padding: 3px 0 !important;
+                font-size: 10px !important;
+                letter-spacing: 0.5px !important;
+                border-width: 1px !important;
+                box-shadow: 0 0 5px rgba(255, 0, 0, 0.4) !important;
+            }
+        }
+
+        /* --- 2K RESOLUTION --- */
+        @media (min-width: 2000px) and (max-width: 2999px) {
+            .btn-donate-arcade {
+                margin-top: 12px !important;
+                font-size: 18px !important;
+                padding: 8px 0 !important;
+            }
+        }
+
+        /* --- 4K RESOLUTION --- */
+        @media (min-width: 3000px) {
+            .btn-donate-arcade {
+                margin-top: 16px !important;
+                font-size: 24px !important;
+                padding: 12px 0 !important;
+            }
+        }
+/* --- DONATE MODAL HIGH-RES FIX --- */
+        #donate-modal-box {
+            width: 460px !important;
+            max-width: 90vw !important;
+        }
+
+        /* 2K Specific (2560x1440) */
+        @media (min-width: 2000px) and (max-width: 2999px) {
+            #custom-loader .search-popup-box#donate-modal-box {
+                transform: scale(1.4) !important;
+                width: 480px !important;
+            }
+            #donate-modal-box #donate-wallet-address {
+                font-size: 12.5px !important;
+                padding: 12px !important;
+            }
+        }
+
+        /* 4K Specific (3840x2160) */
+        @media (min-width: 3000px) {
+            #custom-loader .search-popup-box#donate-modal-box {
+                transform: scale(2.0) !important;
+                width: 520px !important;
+            }
+            #donate-modal-box #donate-wallet-address {
+                font-size: 13px !important;
+                padding: 14px !important;
+            }
+            #donate-modal-box .donate-chain-icon {
+                width: 34px !important;
+                height: 34px !important;
+            }
+        }
+
+        /* Mobile View (<900px) */
+        @media (max-width: 900px), (max-height: 500px) {
+            #custom-loader .search-popup-box#donate-modal-box {
+                width: 320px !important;
+                padding: 10px 14px !important;
+                transform: scale(0.85) !important;
+            }
+            #donate-modal-box #donate-wallet-address {
+                font-size: 9.5px !important;
+                padding: 6px 8px !important;
+                margin-bottom: 10px !important;
+            }
+        }
         .menu-panel {
             position: relative; background: rgba(10, 10, 10, 0.9); border: 2px solid var(--sf-red);
             box-shadow: 0 0 30px rgba(255,0,0,0.5), inset 0 0 15px rgba(0,0,0,0.8);
@@ -2766,7 +2878,7 @@ NetworkManager.prototype.login = function() {
                     <div class="lobby-stat" style="color:#888;">LOADING DATA...</div>
                 </div>
                 <div class="leaderboard-link-container">
-                    <a href="https://sfa-multiplayer.ct.ws/leaderboard" target="_blank" class="leaderboard-lnk" onmouseover="this.style.color='#fff'; this.querySelector('svg').style.fill='#fff';" onmouseout="this.style.color='var(--sf-orange)'; this.querySelector('svg').style.fill='#aaa';">
+                    <a href="https://sfa-multiplayer.ct.ws/leaderboardingame" class="leaderboard-lnk" onmouseover="this.style.color='#fff'; this.querySelector('svg').style.fill='#fff';" onmouseout="this.style.color='var(--sf-orange)'; this.querySelector('svg').style.fill='#aaa';">
                         <svg viewBox="0 0 12 12">
                             <rect x="2" y="1" width="8" height="1"/>
                             <rect x="1" y="2" width="2" height="1"/>
@@ -2783,6 +2895,10 @@ NetworkManager.prototype.login = function() {
                         </svg>
                         <span>VIEW FULL LEADERBOARD</span>
                     </a>
+                      <!-- MOBILE-READY ARCADE DONATE BUTTON -->
+                    <button type="button" class="btn-arcade btn-donate-arcade" onclick="window.showDonateModal()">
+                        SUPPORT &amp; DONATE
+                    </button>
                 </div>
             </div>
         `;
@@ -5270,4 +5386,121 @@ function recordMatchResult() {
         window.saveLocalMatchHistory(opponentName, didIWin);
     }
 }
+             window.showDonateModal = function() {
+    var cl = document.getElementById("custom-loader");
+    if (!cl) return;
+
+    var wallet = "0xF8a70600C38F464431E29FC5ca00E32dC18334A7";
+
+    var html = `
+        <article id="donate-modal-box" class="search-popup-box" style="display: flex; flex-direction: column; align-items: center; width: 440px; max-width: 92vw; background: rgba(10,10,12,0.96); border: 2px solid var(--sf-red); box-shadow: 0 0 30px rgba(255,0,0,0.5); padding: 25px 30px; box-sizing: border-box;">
+            <header style="font-size:32px; font-weight:bold; letter-spacing:2px; margin-bottom:6px; color:var(--sf-orange); text-shadow: 2px 2px 0px #000; transform: skewX(-10deg);">
+                SUPPORT THE ARENA
+            </header>
+
+            <div style="font-size: 13px; color: #aaa; font-family: 'Roboto Condensed', sans-serif; margin-bottom: 14px; letter-spacing: 0.5px;">
+DONATE IF YOU LIKE IT!            </div>
+
+            <!-- Chain Badges (Official PNGs) -->
+            <div style="display: flex; justify-content: center; align-items: center; gap: 12px; margin-bottom: 8px;">
+                <img src="https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/base/info/logo.png"
+                     alt="Base" title="Base" class="donate-chain-icon" style="width: 28px; height: 28px; border-radius: 50%; object-fit: contain; box-shadow: 0 2px 6px rgba(0,0,0,0.7);" draggable="false">
+                <img src="https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/ethereum/info/logo.png"
+                     alt="Ethereum" title="Ethereum" class="donate-chain-icon" style="width: 28px; height: 28px; border-radius: 50%; object-fit: contain; box-shadow: 0 2px 6px rgba(0,0,0,0.7);" draggable="false">
+                <img src="https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/binance/info/logo.png"
+                     alt="BNB Chain" title="BNB Chain" class="donate-chain-icon" style="width: 28px; height: 28px; border-radius: 50%; object-fit: contain; box-shadow: 0 2px 6px rgba(0,0,0,0.7);" draggable="false">
+                <img src="https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/optimism/info/logo.png"
+                     alt="Optimism" title="Optimism" class="donate-chain-icon" style="width: 26px; height: 26px; border-radius: 50%; object-fit: contain; box-shadow: 0 2px 6px rgba(0,0,0,0.7);" draggable="false">
+                <img src="https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/polygon/info/logo.png"
+                     alt="Polygon" title="Polygon" class="donate-chain-icon" style="width: 28px; height: 28px; border-radius: 50%; object-fit: contain; box-shadow: 0 2px 6px rgba(0,0,0,0.7);" draggable="false">
+                <img src="https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/arbitrum/info/logo.png"
+                     alt="Arbitrum" title="Arbitrum" class="donate-chain-icon" style="width: 28px; height: 28px; border-radius: 50%; object-fit: contain; box-shadow: 0 2px 6px rgba(0,0,0,0.7);" draggable="false">
+            </div>
+
+            <div style="font-size: 11px; color: var(--sf-orange); font-family: 'Roboto Condensed', sans-serif; margin-bottom: 14px; letter-spacing: 1px;">
+                BASE • ETH • BSC • POLYGON • ARBITRUM • OP
+            </div>
+
+            <!-- Address Box: Guaranteed fit -->
+            <div id="donate-wallet-address" style="width: 100%; background: #000; border: 2px dashed var(--sf-red); border-radius: 4px; padding: 12px 14px; font-family: 'Consolas', 'Courier New', monospace; font-size: 13px; color: #00e5ff; word-break: break-all; white-space: normal; line-height: 1.4; user-select: all; box-sizing: border-box; margin-bottom: 18px; text-shadow: 0 0 5px rgba(0,229,255,0.5); text-align: center;">
+                ${wallet}
+            </div>
+
+            <div style="display: flex; gap: 14px; width: 100%;">
+                <button onclick="window.copySfaWallet()" class="cancel-btn-arcade" style="flex: 1; border-color: #0f0; color: #0f0; font-size: 17px; padding: 7px 0;">COPY</button>
+                <button onclick="document.getElementById('custom-loader').style.display='none'" class="cancel-btn-arcade" style="flex: 1; font-size: 17px; padding: 7px 0;">CLOSE</button>
+            </div>
+        </article>
+    `;
+
+    cl.innerHTML = html;
+    cl.style.display = "flex";
+};
               
+(function preventBackgroundThrottling() {
+    var originalRaf = window.requestAnimationFrame;
+    var originalCaf = window.cancelAnimationFrame;
+    
+    var workerBlob = new Blob([
+        "var timer; self.onmessage = function(e) {",
+        "if (e.data === 'start') { timer = setInterval(function(){ postMessage('tick'); }, 16); }",
+        "else if (e.data === 'stop') { clearInterval(timer); }",
+        "};"
+    ], { type: 'application/javascript' });
+    var worker = new Worker(URL.createObjectURL(workerBlob));
+    
+    var pendingCallbacks = {};
+    var callbackIdCounter = 0;
+    var isHidden = document.hidden;
+    
+    worker.onmessage = function() {
+        if (isHidden) {
+            var time = performance.now();
+            var keys = Object.keys(pendingCallbacks);
+            var callbacksToRun = [];
+            
+            for (var i = 0; i < keys.length; i++) {
+                callbacksToRun.push(pendingCallbacks[keys[i]]);
+                delete pendingCallbacks[keys[i]];
+            }
+            
+            for (var j = 0; j < callbacksToRun.length; j++) {
+                callbacksToRun[j](time);
+            }
+        }
+    };
+    
+    document.addEventListener("visibilitychange", function() {
+        isHidden = document.hidden;
+        if (isHidden) {
+            worker.postMessage('start');
+        } else {
+            worker.postMessage('stop');  
+            
+            var keys = Object.keys(pendingCallbacks);
+            for (var i = 0; i < keys.length; i++) {
+                var cb = pendingCallbacks[keys[i]];
+                delete pendingCallbacks[keys[i]];
+                originalRaf(cb);
+            }
+        }
+    });
+
+    window.requestAnimationFrame = function(callback) {
+        if (isHidden) {
+            var id = ++callbackIdCounter;
+            pendingCallbacks[id] = callback;
+            return id;
+        } else {
+            return originalRaf(callback);
+        }
+    };
+    
+    window.cancelAnimationFrame = function(id) {
+        if (isHidden && pendingCallbacks[id]) {
+            delete pendingCallbacks[id];
+        } else {
+            originalCaf(id);
+        }
+    };
+})();
